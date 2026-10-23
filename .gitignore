@@ -1,0 +1,12 @@
+node_modules/
+.vercel/
+.tanstack/
+.grok/
+artifacts/
+screenshots/
+android/build/
+android/debug.keystore
+*.log
+.env
+.env.*
+.DS_Store
