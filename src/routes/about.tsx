@@ -42,6 +42,13 @@ function About() {
       <p className="text-base leading-relaxed text-muted">{t("how")}</p>
       <p className="text-base leading-relaxed text-muted">{t("apkNote")}</p>
 
+      <Link
+        to="/coffee"
+        className="inline-flex h-12 items-center justify-center rounded-full border border-line text-sm font-semibold text-fg"
+      >
+        Presentation for Buy Me a Coffee
+      </Link>
+
       <a
         href="/overmark-1.1.0.apk"
         download="Overmark-1.1.0.apk"

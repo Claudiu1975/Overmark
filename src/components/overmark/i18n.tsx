@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { LANGUAGES, MESSAGES, type LangDir } from "@/lib/overmark/locales";
 import { readLang, writeLang } from "@/lib/overmark/storage";
 
@@ -51,10 +52,13 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     };
   }, [lang, dir, picking]);
 
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const pitching = pathname === "/coffee";
+
   return (
     <I18nContext.Provider value={value}>
       {children}
-      {ready && (!lang || picking) ? <LanguagePicker /> : null}
+      {ready && !pitching && (!lang || picking) ? <LanguagePicker /> : null}
     </I18nContext.Provider>
   );
 }
