@@ -775,9 +775,11 @@ public class MainActivity extends Activity implements LocationListener {
         if (disclaimerAbout != null) disclaimerAbout.setText(I18n.t("about"));
         if (aboutVersion != null) aboutVersion.setText(I18n.t("version") + " " + versionName);
         if (aboutAuthorKicker != null) aboutAuthorKicker.setText(I18n.t("author"));
-        if (aboutAuthor != null) aboutAuthor.setText("Claudiu Florian Ivan");
+        if (aboutAuthor != null) aboutAuthor.setText("Claudiu Ivan");
         if (aboutStory != null) aboutStory.setText(I18n.t("appStory"));
-        if (aboutAuthorStory != null) aboutAuthorStory.setText(I18n.t("authorStory"));
+        if (aboutAuthorStory != null) {
+            aboutAuthorStory.setText(I18n.t("authorStory").replace("Claudiu Florian Ivan", "Claudiu Ivan"));
+        }
         if (aboutCoffee != null) aboutCoffee.setText(I18n.t("coffeeInvite"));
         if (aboutOpen != null) aboutOpen.setText(I18n.t("openSource"));
         if (coffeeButton != null) coffeeButton.setText(I18n.t("coffeeButton"));
@@ -1102,8 +1104,9 @@ public class MainActivity extends Activity implements LocationListener {
 
         TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
         kicker.setLetterSpacing(0.18f);
-        kicker.setPadding(0, dp(28), 0, dp(6));
+        kicker.setPadding(0, dp(28), 0, dp(8));
         col.addView(kicker);
+        col.addView(bar());
 
         aboutVersion = label(I18n.t("version") + " " + versionName, 42, COLOR_FG, true);
         aboutVersion.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
@@ -1114,25 +1117,39 @@ public class MainActivity extends Activity implements LocationListener {
         aboutStory.setLineSpacing(dp(4), 1f);
         col.addView(aboutStory);
 
-        whatsNewTitle = label(I18n.t("whatsNew"), 12, COLOR_MUTED, true);
-        whatsNewTitle.setLetterSpacing(0.16f);
-        whatsNewTitle.setPadding(0, dp(28), 0, dp(6));
-        col.addView(whatsNewTitle);
+        aboutHow = label(I18n.t("how"), 16, COLOR_MUTED, false);
+        aboutHow.setPadding(0, dp(16), 0, 0);
+        aboutHow.setLineSpacing(dp(4), 1f);
+        col.addView(aboutHow);
 
-        whatsNewBody = label(I18n.t("whatsNewBody"), 16, COLOR_FG, false);
-        whatsNewBody.setLineSpacing(dp(4), 1f);
-        col.addView(whatsNewBody);
+        aboutOpen = label(I18n.t("openSource"), 16, COLOR_FG, false);
+        aboutOpen.setPadding(0, dp(16), 0, dp(10));
+        aboutOpen.setLineSpacing(dp(4), 1f);
+        col.addView(aboutOpen);
+
+        sourceButton = chip(I18n.t("sourceCode"), false);
+        LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
+        sourceButton.setLayoutParams(sourceLp);
+        sourceButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openUrl(REPO);
+            }
+        });
+        col.addView(sourceButton);
 
         aboutAuthorKicker = label(I18n.t("author"), 12, COLOR_MUTED, true);
         aboutAuthorKicker.setLetterSpacing(0.16f);
-        aboutAuthorKicker.setPadding(0, dp(28), 0, dp(6));
+        aboutAuthorKicker.setPadding(0, dp(56), 0, dp(8));
         col.addView(aboutAuthorKicker);
+        col.addView(bar());
 
-        aboutAuthor = label("Claudiu Florian Ivan", 36, COLOR_FG, true);
+        aboutAuthor = label("Claudiu Ivan", 36, COLOR_FG, true);
         aboutAuthor.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
         col.addView(aboutAuthor);
 
-        aboutAuthorStory = label(I18n.t("authorStory"), 16, COLOR_MUTED, false);
+        aboutAuthorStory = label(I18n.t("authorStory").replace("Claudiu Florian Ivan", "Claudiu Ivan"), 16, COLOR_MUTED, false);
         aboutAuthorStory.setPadding(0, dp(10), 0, 0);
         aboutAuthorStory.setLineSpacing(dp(4), 1f);
         col.addView(aboutAuthorStory);
@@ -1153,28 +1170,6 @@ public class MainActivity extends Activity implements LocationListener {
             }
         });
         col.addView(coffeeButton);
-
-        aboutHow = label(I18n.t("how") + "\n\n" + I18n.t("apkNote"), 16, COLOR_MUTED, false);
-        aboutHow.setPadding(0, dp(22), 0, 0);
-        aboutHow.setLineSpacing(dp(4), 1f);
-        col.addView(aboutHow);
-
-        aboutOpen = label(I18n.t("openSource"), 16, COLOR_FG, false);
-        aboutOpen.setPadding(0, dp(22), 0, dp(10));
-        aboutOpen.setLineSpacing(dp(4), 1f);
-        col.addView(aboutOpen);
-
-        sourceButton = chip(I18n.t("sourceCode"), false);
-        LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
-        sourceButton.setLayoutParams(sourceLp);
-        sourceButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openUrl(REPO);
-            }
-        });
-        col.addView(sourceButton);
 
         try {
             InputStream in = getAssets().open("paypal-qr.png");
@@ -1200,11 +1195,19 @@ public class MainActivity extends Activity implements LocationListener {
             qrView = null;
         }
 
-        addArchive(col);
-
         scroll.addView(col, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
         return scroll;
+    }
+
+    private View bar() {
+        View bar = new View(this);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(6));
+        lp.bottomMargin = dp(14);
+        bar.setLayoutParams(lp);
+        bar.setBackgroundColor(COLOR_SIGNAL);
+        return bar;
     }
 
     private View buildDisclaimer() {
