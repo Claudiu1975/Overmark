@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Coffee, Gauge, Info } from "lucide-react";
+import { Gauge, Info } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/overmark/i18n";
 import { beep, primeAudio, startAlarm, stopAlarm } from "@/lib/overmark/audio";
@@ -277,11 +277,10 @@ export function SpeedScreen() {
             {t("about")}
           </Link>
           <Link
-            to="/coffee"
-            className="inline-flex h-11 items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm text-fg"
+            to="/disclaimer"
+            className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-4 text-sm text-fg"
           >
-            <Coffee className="size-4 text-signal" aria-hidden="true" />
-            Coffee
+            {t("disclaimerTitle")}
           </Link>
         </div>
       </header>

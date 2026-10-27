@@ -51,6 +51,8 @@ png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 
 open("/workspace/android/res/drawable/ic_launcher.png", "wb").write(png)
 PY
 
+cp /workspace/src/lib/overmark/releases.json "$ROOT/assets/releases.json"
+
 "$BT/aapt2" compile -o "$BUILD/flat" "$ROOT/res/drawable/ic_launcher.png"
 
 "$BT/aapt2" link -o "$BUILD/unsigned.apk" \
@@ -86,12 +88,9 @@ mkdir -p /workspace/public /workspace/artifacts
 "$BT/apksigner" sign \
   --ks "$KS" --ks-key-alias androiddebugkey \
   --ks-pass pass:android --key-pass pass:android \
-  --out /workspace/public/overmark-1.2.0.apk \
+  --out /workspace/public/overmark-1.3.0.apk \
   "$BUILD/aligned.apk"
-cp /workspace/public/overmark-1.2.0.apk /workspace/artifacts/Overmark-1.2.0.apk
-"$BT/apksigner" verify --verbose /workspace/public/overmark-1.2.0.apk
-"$BT/aapt" dump badging /workspace/public/overmark-1.2.0.apk | head -n 20
-ls -lh /workspace/public/overmark-1.2.0.apk
-rm -f /workspace/public/overmark-1.0.0.apk /workspace/public/overmark-1.0.0.apk.idsig \
-  /workspace/public/overmark-1.1.0.apk /workspace/public/overmark-1.1.0.apk.idsig \
-  /workspace/artifacts/Overmark-1.0.0.apk /workspace/artifacts/Overmark-1.1.0.apk
+cp /workspace/public/overmark-1.3.0.apk /workspace/artifacts/Overmark-1.3.0.apk
+"$BT/apksigner" verify --verbose /workspace/public/overmark-1.3.0.apk
+"$BT/aapt" dump badging /workspace/public/overmark-1.3.0.apk | head -n 20
+ls -lh /workspace/public/overmark-1.3.0.apk /workspace/public/overmark-1.2.0.apk /workspace/public/overmark-1.1.0.apk

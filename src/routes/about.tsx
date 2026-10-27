@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { useI18n } from "@/components/overmark/i18n";
 import { APP_VERSION, AUTHOR } from "@/lib/overmark/pace";
+import releases from "@/lib/overmark/releases.json";
 
 const PAYPAL = "https://www.paypal.me/G0anga";
 const REPO = "https://github.com/Claudiu1975/Overmark";
@@ -28,7 +29,12 @@ function About() {
         <p className="text-base leading-relaxed text-muted">{t("appStory")}</p>
       </header>
 
-      <section className="flex flex-col gap-3 border-t border-line pt-6">
+      <section className="flex flex-col gap-2 border-t border-line pt-6">
+        <h2 className="text-xs font-semibold tracking-widest text-muted">{t("whatsNew")}</h2>
+        <p className="text-base leading-relaxed text-fg">{t("whatsNewBody")}</p>
+      </section>
+
+      <section className="flex flex-col gap-3">
         <h2 className="text-xs font-semibold tracking-widest text-muted">{t("author")}</h2>
         <p className="font-display text-5xl leading-none text-fg">{AUTHOR}</p>
         <p className="text-base leading-relaxed text-muted">{t("authorStory")}</p>
@@ -42,18 +48,6 @@ function About() {
           {t("coffeeButton")}
         </a>
       </section>
-
-      <section className="flex flex-col gap-2">
-        <h2 className="text-xs font-semibold tracking-widest text-muted">{t("disclaimerTitle")}</h2>
-        <p className="text-base leading-relaxed text-muted">{t("disclaimer")}</p>
-      </section>
-
-      <section className="flex flex-col gap-2">
-        <h2 className="text-xs font-semibold tracking-widest text-muted">{t("privacyTitle")}</h2>
-        <p className="text-base leading-relaxed text-muted">{t("privacy")}</p>
-      </section>
-
-      <p className="text-base leading-relaxed text-muted">{t("how")}</p>
 
       <section className="flex flex-col gap-3">
         <p className="text-base leading-relaxed text-fg">{t("openSource")}</p>
@@ -75,15 +69,42 @@ function About() {
         />
       </a>
 
+      <section className="flex flex-col gap-6 border-t border-line pt-6">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-xs font-semibold tracking-widest text-muted">{t("archiveTitle")}</h2>
+          <p className="text-base leading-relaxed text-muted">{t("archiveIntro")}</p>
+        </div>
+        {releases.map((release) => (
+          <article key={release.version} className="flex flex-col gap-3">
+            <h3 className="font-display text-4xl leading-none text-fg">
+              {t("version")} {release.version}
+            </h3>
+            <ul className="flex flex-col gap-2">
+              {release.notes.map((note) => (
+                <li key={note} className="text-base leading-relaxed text-muted">
+                  {note}
+                </li>
+              ))}
+            </ul>
+            <a
+              href={`/${release.file}`}
+              download={`Overmark-${release.version}.apk`}
+              className="inline-flex h-12 items-center justify-center rounded-full border border-line text-sm font-semibold text-fg"
+            >
+              {t("download")} {release.version}
+            </a>
+          </article>
+        ))}
+      </section>
+
       <p className="text-base leading-relaxed text-muted">{t("apkNote")}</p>
 
-      <a
-        href="/overmark-1.2.0.apk"
-        download="Overmark-1.2.0.apk"
-        className="inline-flex h-14 items-center justify-center rounded-full border border-line text-base font-semibold text-fg"
+      <Link
+        to="/disclaimer"
+        className="inline-flex h-12 items-center justify-center rounded-full border border-line text-sm font-semibold text-fg"
       >
-        {t("download")}
-      </a>
+        {t("disclaimerTitle")}
+      </Link>
     </main>
   );
 }

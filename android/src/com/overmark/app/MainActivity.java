@@ -38,6 +38,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -47,8 +48,10 @@ import android.widget.TextView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -91,6 +94,7 @@ public class MainActivity extends Activity implements LocationListener {
     private GradientDrawable armBg;
     private View mainPane;
     private View aboutPane;
+    private View disclaimerPane;
 
     private float limitKmh = 90f;
     private float speedKmh;
@@ -105,12 +109,15 @@ public class MainActivity extends Activity implements LocationListener {
     private int lastBeepSec;
     private Location previous;
     private Button aboutButton;
+    private Button disclaimerButton;
     private Button langButton;
     private Button minusButton;
     private Button plusButton;
     private Button exitButton;
     private Button minimizeButton;
     private Button backButton;
+    private Button disclaimerBack;
+    private Button disclaimerAbout;
     private TextView limitLabel;
     private TextView aboutVersion;
     private TextView aboutAuthorKicker;
@@ -120,6 +127,11 @@ public class MainActivity extends Activity implements LocationListener {
     private TextView aboutPrivacyTitle;
     private TextView aboutPrivacy;
     private TextView aboutHow;
+    private TextView whatsNewTitle;
+    private TextView whatsNewBody;
+    private TextView archiveTitleView;
+    private TextView archiveIntroView;
+    private final ArrayList<Button> archiveDownloads = new ArrayList<Button>();
     private TextView aboutStory;
     private TextView aboutAuthorStory;
     private TextView aboutCoffee;
@@ -132,7 +144,7 @@ public class MainActivity extends Activity implements LocationListener {
     private EditText langSearch;
     private View langPane;
     private View rootView;
-    private String versionName = "1.2.0";
+    private String versionName = "1.3.0";
     private BroadcastReceiver screenReceiver;
     private boolean alertPosted;
     private long lastAlertAt;
@@ -178,7 +190,7 @@ public class MainActivity extends Activity implements LocationListener {
             PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
             if (info.versionName != null) versionName = info.versionName;
         } catch (PackageManager.NameNotFoundException ignored) {
-            versionName = "1.2.0";
+            versionName = "1.3.0";
         }
 
         getWindow().setStatusBarColor(COLOR_BG);
@@ -208,10 +220,14 @@ public class MainActivity extends Activity implements LocationListener {
         rootView = root;
         mainPane = buildMain();
         aboutPane = buildAbout();
+        disclaimerPane = buildDisclaimer();
         langPane = buildLanguage();
         aboutPane.setVisibility(View.GONE);
+        disclaimerPane.setVisibility(View.GONE);
+        langPane.setVisibility(View.GONE);
         root.addView(mainPane);
         root.addView(aboutPane);
+        root.addView(disclaimerPane);
         root.addView(langPane);
         applyDirection();
         setContentView(root);
@@ -269,6 +285,10 @@ public class MainActivity extends Activity implements LocationListener {
     public void onBackPressed() {
         if (langPane.getVisibility() == View.VISIBLE) {
             showLang(false);
+            return;
+        }
+        if (disclaimerPane.getVisibility() == View.VISIBLE) {
+            showDisclaimer(false);
             return;
         }
         if (aboutPane.getVisibility() == View.VISIBLE) {
@@ -611,19 +631,24 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void showAbout(boolean show) {
-        aboutPane.setVisibility(show ? View.VISIBLE : View.GONE);
-        langPane.setVisibility(View.GONE);
-        mainPane.setVisibility(show ? View.GONE : View.VISIBLE);
+        showPane(show ? aboutPane : null);
+    }
+
+    private void showDisclaimer(boolean show) {
+        showPane(show ? disclaimerPane : null);
     }
 
     private void showLang(boolean show) {
-        langPane.setVisibility(show ? View.VISIBLE : View.GONE);
-        if (show) {
-            mainPane.setVisibility(View.GONE);
-            aboutPane.setVisibility(View.GONE);
-        } else {
-            mainPane.setVisibility(View.VISIBLE);
+        showPane(show ? langPane : null);
+    }
+
+    private void showPane(View pane) {
+        if (mainPane != null) mainPane.setVisibility(pane == null ? View.VISIBLE : View.GONE);
+        if (aboutPane != null) aboutPane.setVisibility(pane == aboutPane ? View.VISIBLE : View.GONE);
+        if (disclaimerPane != null) {
+            disclaimerPane.setVisibility(pane == disclaimerPane ? View.VISIBLE : View.GONE);
         }
+        if (langPane != null) langPane.setVisibility(pane == langPane ? View.VISIBLE : View.GONE);
     }
 
     private void applyDirection() {
@@ -736,6 +761,7 @@ public class MainActivity extends Activity implements LocationListener {
 
     private void relabel() {
         if (aboutButton != null) aboutButton.setText(I18n.t("about"));
+        if (disclaimerButton != null) disclaimerButton.setText(I18n.t("disclaimerTitle"));
         if (langButton != null) langButton.setText(I18n.t("language"));
         if (gpsButton != null) gpsButton.setText("GPS");
         if (benchButton != null) benchButton.setText(I18n.t("bench"));
@@ -745,6 +771,8 @@ public class MainActivity extends Activity implements LocationListener {
         if (minusButton != null) minusButton.setContentDescription(I18n.t("stepDown"));
         if (plusButton != null) plusButton.setContentDescription(I18n.t("stepUp"));
         if (backButton != null) backButton.setText(I18n.t("back"));
+        if (disclaimerBack != null) disclaimerBack.setText(I18n.t("back"));
+        if (disclaimerAbout != null) disclaimerAbout.setText(I18n.t("about"));
         if (aboutVersion != null) aboutVersion.setText(I18n.t("version") + " " + versionName);
         if (aboutAuthorKicker != null) aboutAuthorKicker.setText(I18n.t("author"));
         if (aboutAuthor != null) aboutAuthor.setText("Claudiu Florian Ivan");
@@ -760,6 +788,14 @@ public class MainActivity extends Activity implements LocationListener {
         if (aboutPrivacyTitle != null) aboutPrivacyTitle.setText(I18n.t("privacyTitle"));
         if (aboutPrivacy != null) aboutPrivacy.setText(I18n.t("privacy"));
         if (aboutHow != null) aboutHow.setText(I18n.t("how") + "\n\n" + I18n.t("apkNote"));
+        if (whatsNewTitle != null) whatsNewTitle.setText(I18n.t("whatsNew"));
+        if (whatsNewBody != null) whatsNewBody.setText(I18n.t("whatsNewBody"));
+        if (archiveTitleView != null) archiveTitleView.setText(I18n.t("archiveTitle"));
+        if (archiveIntroView != null) archiveIntroView.setText(I18n.t("archiveIntro"));
+        for (int i = 0; i < archiveDownloads.size(); i++) {
+            Button download = archiveDownloads.get(i);
+            download.setText(I18n.t("download") + " " + download.getTag());
+        }
         if (langTitle != null) langTitle.setText(I18n.t("chooseLanguage"));
         if (langHint != null) langHint.setText(I18n.t("chooseHint"));
         if (langSearch != null) langSearch.setHint(I18n.t("searchLang"));
@@ -767,6 +803,8 @@ public class MainActivity extends Activity implements LocationListener {
 
     private String statusText() {
         if (aboutPane != null && aboutPane.getVisibility() == View.VISIBLE) return "";
+        if (disclaimerPane != null && disclaimerPane.getVisibility() == View.VISIBLE) return "";
+        if (langPane != null && langPane.getVisibility() == View.VISIBLE) return "";
         if (!tracking) return I18n.t("standby");
         if (!bench && !hasFix) return I18n.t("searching");
         if (alarming) return I18n.t("alarm");
@@ -803,11 +841,14 @@ public class MainActivity extends Activity implements LocationListener {
         LinearLayout col = column();
         col.setPadding(dp(20), dp(18), dp(20), dp(24));
 
-        LinearLayout header = row();
-        header.setGravity(Gravity.CENTER_VERTICAL);
         TextView title = label("OVERMARK", 14, COLOR_FG, true);
         title.setLetterSpacing(0.18f);
-        title.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        col.addView(title);
+
+        HorizontalScrollView navScroll = new HorizontalScrollView(this);
+        navScroll.setHorizontalScrollBarEnabled(false);
+        LinearLayout nav = row();
+        nav.setPadding(0, dp(12), 0, 0);
         langButton = chip(I18n.t("language"), false);
         langButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -822,10 +863,20 @@ public class MainActivity extends Activity implements LocationListener {
                 showAbout(true);
             }
         });
-        header.addView(title);
-        header.addView(langButton);
-        header.addView(aboutButton);
-        col.addView(header);
+        disclaimerButton = chip(I18n.t("disclaimerTitle"), false);
+        disclaimerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDisclaimer(true);
+            }
+        });
+        nav.addView(langButton);
+        nav.addView(gap(8));
+        nav.addView(aboutButton);
+        nav.addView(gap(8));
+        nav.addView(disclaimerButton);
+        navScroll.addView(nav);
+        col.addView(navScroll);
 
         statusView = label("STANDBY", 12, COLOR_MUTED, true);
         statusView.setLetterSpacing(0.16f);
@@ -1063,6 +1114,15 @@ public class MainActivity extends Activity implements LocationListener {
         aboutStory.setLineSpacing(dp(4), 1f);
         col.addView(aboutStory);
 
+        whatsNewTitle = label(I18n.t("whatsNew"), 12, COLOR_MUTED, true);
+        whatsNewTitle.setLetterSpacing(0.16f);
+        whatsNewTitle.setPadding(0, dp(28), 0, dp(6));
+        col.addView(whatsNewTitle);
+
+        whatsNewBody = label(I18n.t("whatsNewBody"), 16, COLOR_FG, false);
+        whatsNewBody.setLineSpacing(dp(4), 1f);
+        col.addView(whatsNewBody);
+
         aboutAuthorKicker = label(I18n.t("author"), 12, COLOR_MUTED, true);
         aboutAuthorKicker.setLetterSpacing(0.16f);
         aboutAuthorKicker.setPadding(0, dp(28), 0, dp(6));
@@ -1094,25 +1154,7 @@ public class MainActivity extends Activity implements LocationListener {
         });
         col.addView(coffeeButton);
 
-        aboutDisclaimerTitle = label(I18n.t("disclaimerTitle"), 12, COLOR_MUTED, true);
-        aboutDisclaimerTitle.setLetterSpacing(0.16f);
-        aboutDisclaimerTitle.setPadding(0, dp(28), 0, dp(6));
-        col.addView(aboutDisclaimerTitle);
-
-        aboutDisclaimer = label(I18n.t("disclaimer"), 16, COLOR_MUTED, false);
-        aboutDisclaimer.setLineSpacing(dp(4), 1f);
-        col.addView(aboutDisclaimer);
-
-        aboutPrivacyTitle = label(I18n.t("privacyTitle"), 12, COLOR_MUTED, true);
-        aboutPrivacyTitle.setLetterSpacing(0.16f);
-        aboutPrivacyTitle.setPadding(0, dp(22), 0, dp(6));
-        col.addView(aboutPrivacyTitle);
-
-        aboutPrivacy = label(I18n.t("privacy"), 16, COLOR_MUTED, false);
-        aboutPrivacy.setLineSpacing(dp(4), 1f);
-        col.addView(aboutPrivacy);
-
-        aboutHow = label(I18n.t("how"), 16, COLOR_MUTED, false);
+        aboutHow = label(I18n.t("how") + "\n\n" + I18n.t("apkNote"), 16, COLOR_MUTED, false);
         aboutHow.setPadding(0, dp(22), 0, 0);
         aboutHow.setLineSpacing(dp(4), 1f);
         col.addView(aboutHow);
@@ -1158,9 +1200,138 @@ public class MainActivity extends Activity implements LocationListener {
             qrView = null;
         }
 
+        addArchive(col);
+
         scroll.addView(col, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
         return scroll;
+    }
+
+    private View buildDisclaimer() {
+        ScrollView scroll = new ScrollView(this);
+        scroll.setBackgroundColor(COLOR_BG);
+        LinearLayout col = column();
+        col.setPadding(dp(20), dp(18), dp(20), dp(28));
+
+        disclaimerBack = chip(I18n.t("back"), false);
+        disclaimerBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDisclaimer(false);
+            }
+        });
+        col.addView(disclaimerBack);
+
+        TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
+        kicker.setLetterSpacing(0.18f);
+        kicker.setPadding(0, dp(28), 0, dp(6));
+        col.addView(kicker);
+
+        aboutDisclaimerTitle = label(I18n.t("disclaimerTitle"), 36, COLOR_FG, true);
+        aboutDisclaimerTitle.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        col.addView(aboutDisclaimerTitle);
+
+        aboutDisclaimer = label(I18n.t("disclaimer"), 16, COLOR_MUTED, false);
+        aboutDisclaimer.setPadding(0, dp(16), 0, 0);
+        aboutDisclaimer.setLineSpacing(dp(4), 1f);
+        col.addView(aboutDisclaimer);
+
+        aboutPrivacyTitle = label(I18n.t("privacyTitle"), 12, COLOR_MUTED, true);
+        aboutPrivacyTitle.setLetterSpacing(0.16f);
+        aboutPrivacyTitle.setPadding(0, dp(28), 0, dp(6));
+        col.addView(aboutPrivacyTitle);
+
+        aboutPrivacy = label(I18n.t("privacy"), 16, COLOR_MUTED, false);
+        aboutPrivacy.setLineSpacing(dp(4), 1f);
+        col.addView(aboutPrivacy);
+
+        Button toAbout = chip(I18n.t("about"), false);
+        disclaimerAbout = toAbout;
+        LinearLayout.LayoutParams aboutLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
+        aboutLp.topMargin = dp(22);
+        toAbout.setLayoutParams(aboutLp);
+        toAbout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAbout(true);
+            }
+        });
+        col.addView(toAbout);
+
+        scroll.addView(col, new ScrollView.LayoutParams(
+                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
+        return scroll;
+    }
+
+    private void addArchive(LinearLayout col) {
+        archiveTitleView = label(I18n.t("archiveTitle"), 12, COLOR_MUTED, true);
+        archiveTitleView.setLetterSpacing(0.16f);
+        archiveTitleView.setPadding(0, dp(28), 0, dp(6));
+        col.addView(archiveTitleView);
+
+        archiveIntroView = label(I18n.t("archiveIntro"), 16, COLOR_MUTED, false);
+        archiveIntroView.setLineSpacing(dp(4), 1f);
+        col.addView(archiveIntroView);
+
+        try {
+            JSONArray list = new JSONArray(readAsset("releases.json"));
+            for (int i = 0; i < list.length(); i++) {
+                JSONObject item = list.optJSONObject(i);
+                if (item == null) continue;
+                String version = item.optString("version");
+                TextView head = label(I18n.t("version") + " " + version, 28, COLOR_FG, true);
+                head.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+                head.setPadding(0, dp(18), 0, dp(6));
+                col.addView(head);
+                JSONArray notes = item.optJSONArray("notes");
+                if (notes != null) {
+                    StringBuilder body = new StringBuilder();
+                    for (int n = 0; n < notes.length(); n++) {
+                        if (n > 0) body.append("\n");
+                        body.append("• ").append(notes.optString(n));
+                    }
+                    TextView note = label(body.toString(), 15, COLOR_MUTED, false);
+                    note.setLineSpacing(dp(3), 1f);
+                    col.addView(note);
+                }
+                String file = item.optString("file");
+                if (file.length() == 0) continue;
+                Button download = chip(I18n.t("download") + " " + version, false);
+                download.setTag(version);
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
+                lp.topMargin = dp(10);
+                download.setLayoutParams(lp);
+                final String url = "https://github.com/Claudiu1975/Overmark/raw/main/public/" + file;
+                download.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        openUrl(url);
+                    }
+                });
+                archiveDownloads.add(download);
+                col.addView(download);
+            }
+        } catch (Exception ignored) {
+            /* the page still shows the current note */
+        }
+    }
+
+    private String readAsset(String name) throws Exception {
+        InputStream in = getAssets().open(name);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buf = new byte[4096];
+        int n;
+        while ((n = in.read(buf)) >= 0) out.write(buf, 0, n);
+        in.close();
+        return new String(out.toByteArray(), StandardCharsets.UTF_8);
+    }
+
+    private View gap(int dp) {
+        View view = new View(this);
+        view.setLayoutParams(new LinearLayout.LayoutParams(dp(dp), 1));
+        return view;
     }
 
     private View buildLanguage() {

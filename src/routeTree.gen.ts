@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as CoffeeRouteImport } from './routes/coffee'
+import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +29,44 @@ const CoffeeRoute = CoffeeRouteImport.update({
   path: '/coffee',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DisclaimerRoute = DisclaimerRouteImport.update({
+  id: '/disclaimer',
+  path: '/disclaimer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/coffee': typeof CoffeeRoute
+  '/disclaimer': typeof DisclaimerRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/coffee': typeof CoffeeRoute
+  '/disclaimer': typeof DisclaimerRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/coffee': typeof CoffeeRoute
+  '/disclaimer': typeof DisclaimerRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/coffee'
+  fullPaths: '/' | '/about' | '/coffee' | '/disclaimer'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/coffee'
-  id: '__root__' | '/' | '/about' | '/coffee'
+  to: '/' | '/about' | '/coffee' | '/disclaimer'
+  id: '__root__' | '/' | '/about' | '/coffee' | '/disclaimer'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   CoffeeRoute: typeof CoffeeRoute
+  DisclaimerRoute: typeof DisclaimerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +92,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoffeeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/disclaimer': {
+      id: '/disclaimer'
+      path: '/disclaimer'
+      fullPath: '/disclaimer'
+      preLoaderRoute: typeof DisclaimerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   CoffeeRoute: CoffeeRoute,
+  DisclaimerRoute: DisclaimerRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
