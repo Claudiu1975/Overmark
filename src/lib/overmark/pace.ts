@@ -1,5 +1,5 @@
-export const APP_VERSION = "1.1.0";
-export const AUTHOR = "Claudiu Ivan";
+export const APP_VERSION = "1.2.0";
+export const AUTHOR = "Claudiu Florian Ivan";
 export const ALARM_AFTER_MS = 45_000;
 export const MARK_COUNT = 45;
 export const MAX_PLAUSIBLE_KMH = 450;

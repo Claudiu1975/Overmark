@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import { LANGUAGES, MESSAGES, type LangDir } from "@/lib/overmark/locales";
+import { LANGUAGES, MESSAGES, matchLanguage, type LangDir } from "@/lib/overmark/locales";
 import { readLang, writeLang } from "@/lib/overmark/storage";
 
 export type MessageKey = keyof typeof MESSAGES.en;
@@ -23,7 +23,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = readLang();
-    if (saved && MESSAGES[saved]) setLangState(saved);
+    if (saved && MESSAGES[saved]) {
+      setLangState(saved);
+    } else if (typeof navigator !== "undefined") {
+      const tags = navigator.languages?.length ? navigator.languages : [navigator.language];
+      setLangState(matchLanguage(tags));
+    }
     setReady(true);
   }, []);
 
@@ -58,7 +63,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   return (
     <I18nContext.Provider value={value}>
       {children}
-      {ready && !pitching && (!lang || picking) ? <LanguagePicker /> : null}
+      {ready && !pitching && picking ? <LanguagePicker /> : null}
     </I18nContext.Provider>
   );
 }

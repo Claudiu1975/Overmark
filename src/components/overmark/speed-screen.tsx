@@ -95,6 +95,34 @@ export function SpeedScreen() {
     return () => window.clearInterval(id);
   }, [over]);
 
+  useEffect(() => {
+    if (mode !== "gps" || !over || closed) return;
+    if (typeof Notification === "undefined") return;
+    let note: Notification | null = null;
+    const sync = () => {
+      if (document.visibilityState !== "hidden") {
+        note?.close();
+        note = null;
+        return;
+      }
+      if (Notification.permission !== "granted" || note) return;
+      try {
+        note = new Notification("Overmark", {
+          body: t("alertOver"),
+          tag: "overmark-over",
+        });
+      } catch {
+        note = null;
+      }
+    };
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      document.removeEventListener("visibilitychange", sync);
+      note?.close();
+    };
+  }, [over, mode, closed, t]);
+
   useEffect(() => () => stopAlarm(), []);
 
   const phase = phaseOf({ running: running && !closed, hasFix, speedKmh, limitKmh, elapsedMs });
@@ -136,6 +164,9 @@ export function SpeedScreen() {
       setRunning(false);
       if (mode === "gps") setGpsStatus("idle");
       return;
+    }
+    if (mode === "gps" && typeof Notification !== "undefined" && Notification.permission === "default") {
+      void Notification.requestPermission().catch(() => undefined);
     }
     setElapsedMs(0);
     if (mode === "gps") setGpsStatus("search");

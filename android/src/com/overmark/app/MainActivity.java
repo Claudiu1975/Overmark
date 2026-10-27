@@ -2,45 +2,63 @@ package com.overmark.app;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.view.ViewGroup;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Locale;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Locale;
+
 public class MainActivity extends Activity implements LocationListener {
     private static final int REQ_LOCATION = 10;
+    private static final int REQ_NOTIFY = 11;
+    private static final int ALERT_ID = 8;
+    private static final String ALERT_CHANNEL = "overmark-alert";
+    private static final String PAYPAL = "https://www.paypal.me/G0anga";
+    private static final String REPO = "https://github.com/Claudiu1975/Overmark";
     private static final String PREFS = "overmark";
     private static final int COLOR_BG = 0xFF12110E;
     private static final int COLOR_SURFACE = 0xFF1C1A16;
@@ -102,12 +120,22 @@ public class MainActivity extends Activity implements LocationListener {
     private TextView aboutPrivacyTitle;
     private TextView aboutPrivacy;
     private TextView aboutHow;
+    private TextView aboutStory;
+    private TextView aboutAuthorStory;
+    private TextView aboutCoffee;
+    private TextView aboutOpen;
+    private Button coffeeButton;
+    private Button sourceButton;
+    private ImageView qrView;
     private TextView langTitle;
     private TextView langHint;
     private EditText langSearch;
     private View langPane;
     private View rootView;
-    private String versionName = "1.1.0";
+    private String versionName = "1.2.0";
+    private BroadcastReceiver screenReceiver;
+    private boolean alertPosted;
+    private long lastAlertAt;
 
     private final Runnable uiTick = new Runnable() {
         @Override
@@ -142,6 +170,7 @@ public class MainActivity extends Activity implements LocationListener {
         mph = prefs.getBoolean("mph", false);
         String savedLang = prefs.getString("lang", null);
         if (savedLang != null) I18n.lang = savedLang;
+        else I18n.lang = I18n.matchDevice(Locale.getDefault());
         locations = (LocationManager) getSystemService(LOCATION_SERVICE);
         vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         sound = SoundBoard.create();
@@ -149,7 +178,7 @@ public class MainActivity extends Activity implements LocationListener {
             PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
             if (info.versionName != null) versionName = info.versionName;
         } catch (PackageManager.NameNotFoundException ignored) {
-            versionName = "1.1.0";
+            versionName = "1.2.0";
         }
 
         getWindow().setStatusBarColor(COLOR_BG);
@@ -186,7 +215,7 @@ public class MainActivity extends Activity implements LocationListener {
         root.addView(langPane);
         applyDirection();
         setContentView(root);
-        if (savedLang == null) showLang(true);
+        registerScreenWatch();
 
         if (tracking && !bench) beginGps();
         if (alarming) {
@@ -219,9 +248,17 @@ public class MainActivity extends Activity implements LocationListener {
     @Override
     protected void onDestroy() {
         handler.removeCallbacksAndMessages(null);
+        if (screenReceiver != null) {
+            try {
+                unregisterReceiver(screenReceiver);
+            } catch (Exception ignored) {
+                /* already gone */
+            }
+            screenReceiver = null;
+        }
         stopGps();
         if (!isChangingConfigurations()) {
-            stopService(new Intent(this, KeepAliveService.class));
+            stopKeepAlive();
         }
         if (sound != null) sound.release();
         if (vibrator != null) vibrator.cancel();
@@ -231,11 +268,7 @@ public class MainActivity extends Activity implements LocationListener {
     @Override
     public void onBackPressed() {
         if (langPane.getVisibility() == View.VISIBLE) {
-            if (prefs.getString("lang", null) != null) {
-                showLang(false);
-                return;
-            }
-            exitApp();
+            showLang(false);
             return;
         }
         if (aboutPane.getVisibility() == View.VISIBLE) {
@@ -320,6 +353,7 @@ public class MainActivity extends Activity implements LocationListener {
         } else if (overSince >= 0L || alarming) {
             resetPace();
         }
+        syncAlert();
         paint();
     }
 
@@ -327,6 +361,7 @@ public class MainActivity extends Activity implements LocationListener {
         overSince = -1L;
         lastBeepSec = 0;
         stopAlarm();
+        cancelAlert();
     }
 
     private void playBeep() {
@@ -359,6 +394,7 @@ public class MainActivity extends Activity implements LocationListener {
         if (tracking) {
             tracking = false;
             stopGps();
+            stopKeepAlive();
             resetPace();
             clearKeepScreen();
             paint();
@@ -380,6 +416,7 @@ public class MainActivity extends Activity implements LocationListener {
             return;
         }
         if (!gpsReady()) {
+            ensureNotifyPermission();
             paint();
             openGpsSettings();
             return;
@@ -398,14 +435,18 @@ public class MainActivity extends Activity implements LocationListener {
         }
         if (!enabled) {
             hasFix = false;
+            ensureNotifyPermission();
             paint();
             return;
         }
         try {
             locations.requestLocationUpdates(LocationManager.GPS_PROVIDER, 400L, 0f, this);
+            startKeepAlive();
+            ensureNotifyPermission();
         } catch (SecurityException ignored) {
             tracking = false;
             resetPace();
+            stopKeepAlive();
         }
         paint();
     }
@@ -419,6 +460,109 @@ public class MainActivity extends Activity implements LocationListener {
             }
         }
         previous = null;
+    }
+
+    private void startKeepAlive() {
+        try {
+            Intent intent = new Intent(this, KeepAliveService.class);
+            if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent);
+            else startService(intent);
+        } catch (Exception ignored) {
+            /* GPS still runs while this screen is open */
+        }
+    }
+
+    private void stopKeepAlive() {
+        try {
+            stopService(new Intent(this, KeepAliveService.class));
+        } catch (Exception ignored) {
+            /* already stopped */
+        }
+        cancelAlert();
+    }
+
+    private void ensureNotifyPermission() {
+        if (Build.VERSION.SDK_INT < 33) return;
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return;
+        try {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIFY);
+        } catch (Exception ignored) {
+            /* GPS does not wait on this */
+        }
+    }
+
+    private void registerScreenWatch() {
+        screenReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                syncAlert();
+            }
+        };
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(screenReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(screenReceiver, filter);
+        }
+    }
+
+    private boolean screenIsOff() {
+        PowerManager power = (PowerManager) getSystemService(POWER_SERVICE);
+        return power != null && !power.isInteractive();
+    }
+
+    private void syncAlert() {
+        boolean show = tracking && !bench && hasFix && Pace.overLimit(speedKmh, limitKmh) && screenIsOff();
+        if (!show) {
+            cancelAlert();
+            return;
+        }
+        long now = SystemClock.elapsedRealtime();
+        if (alertPosted && now - lastAlertAt < 1000L) return;
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (manager == null) return;
+        if (Build.VERSION.SDK_INT >= 26 && manager.getNotificationChannel(ALERT_CHANNEL) == null) {
+            NotificationChannel channel = new NotificationChannel(
+                    ALERT_CHANNEL, "Overmark", NotificationManager.IMPORTANCE_HIGH);
+            channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            channel.setDescription(I18n.t("alertOver"));
+            manager.createNotificationChannel(channel);
+        }
+        int shown = Math.round(Pace.toDisplay(speedKmh, mph));
+        String unit = mph ? "mph" : "km/h";
+        Notification note = new Notification.Builder(this, ALERT_CHANNEL)
+                .setContentTitle("Overmark")
+                .setContentText(I18n.t("alertOver") + " · " + shown + " " + unit)
+                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                .setCategory(Notification.CATEGORY_ALARM)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .build();
+        try {
+            manager.notify(ALERT_ID, note);
+            alertPosted = true;
+            lastAlertAt = now;
+        } catch (Exception ignored) {
+            alertPosted = false;
+        }
+    }
+
+    private void cancelAlert() {
+        if (!alertPosted) return;
+        alertPosted = false;
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (manager != null) manager.cancel(ALERT_ID);
+    }
+
+    private void openUrl(String url) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (Exception ignored) {
+            /* no browser */
+        }
     }
 
     private void keepScreen() {
@@ -458,6 +602,7 @@ public class MainActivity extends Activity implements LocationListener {
         }
         tracking = false;
         stopGps();
+        stopKeepAlive();
         resetPace();
         clearKeepScreen();
         bench = next;
@@ -498,15 +643,7 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void minimize() {
-        if (tracking && !bench) {
-            try {
-                Intent intent = new Intent(this, KeepAliveService.class);
-                if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent);
-                else startService(intent);
-            } catch (Exception ignored) {
-                /* still leave the foreground */
-            }
-        }
+        if (tracking && !bench) startKeepAlive();
         moveTaskToBack(true);
     }
 
@@ -516,7 +653,7 @@ public class MainActivity extends Activity implements LocationListener {
         stopGps();
         resetPace();
         clearKeepScreen();
-        stopService(new Intent(this, KeepAliveService.class));
+        stopKeepAlive();
         wipeVolatile();
         finishAndRemoveTask();
     }
@@ -610,7 +747,14 @@ public class MainActivity extends Activity implements LocationListener {
         if (backButton != null) backButton.setText(I18n.t("back"));
         if (aboutVersion != null) aboutVersion.setText(I18n.t("version") + " " + versionName);
         if (aboutAuthorKicker != null) aboutAuthorKicker.setText(I18n.t("author"));
-        if (aboutAuthor != null) aboutAuthor.setText("Claudiu Ivan");
+        if (aboutAuthor != null) aboutAuthor.setText("Claudiu Florian Ivan");
+        if (aboutStory != null) aboutStory.setText(I18n.t("appStory"));
+        if (aboutAuthorStory != null) aboutAuthorStory.setText(I18n.t("authorStory"));
+        if (aboutCoffee != null) aboutCoffee.setText(I18n.t("coffeeInvite"));
+        if (aboutOpen != null) aboutOpen.setText(I18n.t("openSource"));
+        if (coffeeButton != null) coffeeButton.setText(I18n.t("coffeeButton"));
+        if (sourceButton != null) sourceButton.setText(I18n.t("sourceCode"));
+        if (qrView != null) qrView.setContentDescription(I18n.t("coffeeButton"));
         if (aboutDisclaimerTitle != null) aboutDisclaimerTitle.setText(I18n.t("disclaimerTitle"));
         if (aboutDisclaimer != null) aboutDisclaimer.setText(I18n.t("disclaimer"));
         if (aboutPrivacyTitle != null) aboutPrivacyTitle.setText(I18n.t("privacyTitle"));
@@ -914,14 +1058,41 @@ public class MainActivity extends Activity implements LocationListener {
         aboutVersion.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
         col.addView(aboutVersion);
 
+        aboutStory = label(I18n.t("appStory"), 16, COLOR_MUTED, false);
+        aboutStory.setPadding(0, dp(16), 0, 0);
+        aboutStory.setLineSpacing(dp(4), 1f);
+        col.addView(aboutStory);
+
         aboutAuthorKicker = label(I18n.t("author"), 12, COLOR_MUTED, true);
         aboutAuthorKicker.setLetterSpacing(0.16f);
         aboutAuthorKicker.setPadding(0, dp(28), 0, dp(6));
         col.addView(aboutAuthorKicker);
 
-        aboutAuthor = label("Claudiu Ivan", 36, COLOR_FG, true);
+        aboutAuthor = label("Claudiu Florian Ivan", 36, COLOR_FG, true);
         aboutAuthor.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
         col.addView(aboutAuthor);
+
+        aboutAuthorStory = label(I18n.t("authorStory"), 16, COLOR_MUTED, false);
+        aboutAuthorStory.setPadding(0, dp(10), 0, 0);
+        aboutAuthorStory.setLineSpacing(dp(4), 1f);
+        col.addView(aboutAuthorStory);
+
+        aboutCoffee = label(I18n.t("coffeeInvite"), 16, COLOR_FG, false);
+        aboutCoffee.setPadding(0, dp(14), 0, dp(10));
+        aboutCoffee.setLineSpacing(dp(4), 1f);
+        col.addView(aboutCoffee);
+
+        coffeeButton = chip(I18n.t("coffeeButton"), true);
+        LinearLayout.LayoutParams coffeeLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(52));
+        coffeeButton.setLayoutParams(coffeeLp);
+        coffeeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openUrl(PAYPAL);
+            }
+        });
+        col.addView(coffeeButton);
 
         aboutDisclaimerTitle = label(I18n.t("disclaimerTitle"), 12, COLOR_MUTED, true);
         aboutDisclaimerTitle.setLetterSpacing(0.16f);
@@ -945,6 +1116,47 @@ public class MainActivity extends Activity implements LocationListener {
         aboutHow.setPadding(0, dp(22), 0, 0);
         aboutHow.setLineSpacing(dp(4), 1f);
         col.addView(aboutHow);
+
+        aboutOpen = label(I18n.t("openSource"), 16, COLOR_FG, false);
+        aboutOpen.setPadding(0, dp(22), 0, dp(10));
+        aboutOpen.setLineSpacing(dp(4), 1f);
+        col.addView(aboutOpen);
+
+        sourceButton = chip(I18n.t("sourceCode"), false);
+        LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
+        sourceButton.setLayoutParams(sourceLp);
+        sourceButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openUrl(REPO);
+            }
+        });
+        col.addView(sourceButton);
+
+        try {
+            InputStream in = getAssets().open("paypal-qr.png");
+            Bitmap bitmap = BitmapFactory.decodeStream(in);
+            in.close();
+            qrView = new ImageView(this);
+            qrView.setImageBitmap(bitmap);
+            qrView.setAdjustViewBounds(true);
+            qrView.setContentDescription(I18n.t("coffeeButton"));
+            qrView.setBackgroundColor(0xFFFFFFFF);
+            LinearLayout.LayoutParams qrLp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            qrLp.topMargin = dp(22);
+            qrView.setLayoutParams(qrLp);
+            qrView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openUrl(PAYPAL);
+                }
+            });
+            col.addView(qrView);
+        } catch (Exception ignored) {
+            qrView = null;
+        }
 
         scroll.addView(col, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));

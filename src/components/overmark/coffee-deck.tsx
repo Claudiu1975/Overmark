@@ -14,7 +14,7 @@ Overmark is a driving aid, not a certified speedometer. You alone follow the roa
 
 If it is useful, a coffee keeps the next version moving.
 
-Claudiu Ivan`;
+Claudiu Florian Ivan`;
 
 const SLIDES: {
   kicker: string;
@@ -27,7 +27,7 @@ const SLIDES: {
   {
     kicker: "Overmark",
     title: "A reminder that stays on the phone.",
-    body: "Built by Claudiu Ivan. Free to use. The only ask is a coffee, if it earns one.",
+    body: "Built by Claudiu Florian Ivan. Free to use. The only ask is a coffee, if it earns one.",
     image: "/deck/road.jpg",
   },
   {
@@ -240,7 +240,7 @@ export function CoffeeDeck() {
         {slide.ask ? (
           <figcaption className="absolute bottom-6 left-6 inline-flex items-center gap-2 text-sm font-semibold tracking-widest text-fg">
             <Coffee className="size-4 text-signal" aria-hidden="true" />
-            Claudiu Ivan
+            Claudiu Florian Ivan
           </figcaption>
         ) : null}
       </figure>

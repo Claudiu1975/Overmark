@@ -9,7 +9,7 @@ export const Route = createFileRoute("/coffee")({
       {
         name: "description",
         content:
-          "A short presentation of Overmark by Claudiu Ivan, and the text for a Buy Me a Coffee page.",
+          "A short presentation of Overmark by Claudiu Florian Ivan, and the text for a Buy Me a Coffee page.",
       },
     ],
   }),
