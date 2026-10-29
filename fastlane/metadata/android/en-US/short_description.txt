@@ -1,0 +1,1 @@
+GPS speed watch with a beep each second and an alarm at 45

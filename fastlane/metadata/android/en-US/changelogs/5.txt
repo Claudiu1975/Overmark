@@ -1,0 +1,1 @@
+Gradle build for F-Droid. Unused network permissions removed. Version 1.4.0.

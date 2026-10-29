@@ -5,6 +5,7 @@ node_modules/
 artifacts/
 screenshots/
 android/build/
+android/.gradle/
 android/debug.keystore
 *.log
 .env

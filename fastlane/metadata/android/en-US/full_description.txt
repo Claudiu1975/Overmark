@@ -1,0 +1,9 @@
+Overmark watches the speed of this device with GPS.
+
+While the speed stays over a limit you choose, a short beep marks every second. After 45 seconds an alarm sounds and the speed flashes red. Drop under the limit and the count starts over.
+
+The limit starts at 90 km/h and moves in steps of 0.5 km/h. The app opens in the language of the device. A language you choose stays on that device.
+
+Only the language and the speed limit are kept. Leaving the app clears temporary files. There is no account and no analytics.
+
+If the screen is off and the speed is over the limit, Overmark posts a notification that can show on the lock screen.

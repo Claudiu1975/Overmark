@@ -14,9 +14,10 @@ fi
 
 rm -rf "$BUILD"
 mkdir -p "$BUILD/flat" "$BUILD/classes" "$BUILD/dex" "$ROOT/res/drawable"
+export ICON_OUT="$ROOT/res/drawable/ic_launcher.png"
 
 python3 - <<'PY'
-import struct, zlib
+import os, struct, zlib
 w = h = 192
 def px(x, y):
     cx = cy = 96
@@ -29,8 +30,6 @@ def px(x, y):
         return bg
     if 62 <= d <= 78:
         return amber
-    # needle from center toward upper right
-    # line from (96,96) to (132,62)
     nx, ny = 36, -34
     t = 0 if (nx*nx+ny*ny)==0 else max(0, min(1, (dx*nx + dy*ny) / (nx*nx+ny*ny)))
     lx, ly = nx*t, ny*t
@@ -48,10 +47,12 @@ for y in range(h):
 def chunk(tag, data):
     return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
 png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(bytes(raw), 9)) + chunk(b"IEND", b"")
-open("/workspace/android/res/drawable/ic_launcher.png", "wb").write(png)
+open(os.environ["ICON_OUT"], "wb").write(png)
 PY
 
-cp /workspace/src/lib/overmark/releases.json "$ROOT/assets/releases.json"
+if [ -f "$ROOT/../src/lib/overmark/releases.json" ]; then
+  cp "$ROOT/../src/lib/overmark/releases.json" "$ROOT/assets/releases.json"
+fi
 
 "$BT/aapt2" compile -o "$BUILD/flat" "$ROOT/res/drawable/ic_launcher.png"
 
@@ -84,13 +85,13 @@ if [ ! -f "$KS" ]; then
     -dname "CN=Overmark, OU=Grok and you, O=Overmark, C=US"
 fi
 
-mkdir -p /workspace/public /workspace/artifacts
+mkdir -p "$ROOT/../public" "$ROOT/../artifacts"
 "$BT/apksigner" sign \
   --ks "$KS" --ks-key-alias androiddebugkey \
   --ks-pass pass:android --key-pass pass:android \
-  --out /workspace/public/overmark-1.3.0.apk \
+  --out "$ROOT/../public/overmark-1.4.0.apk" \
   "$BUILD/aligned.apk"
-cp /workspace/public/overmark-1.3.0.apk /workspace/artifacts/Overmark-1.3.0.apk
-"$BT/apksigner" verify --verbose /workspace/public/overmark-1.3.0.apk
-"$BT/aapt" dump badging /workspace/public/overmark-1.3.0.apk | head -n 20
-ls -lh /workspace/public/overmark-1.3.0.apk /workspace/public/overmark-1.2.0.apk /workspace/public/overmark-1.1.0.apk
+cp "$ROOT/../public/overmark-1.4.0.apk" "$ROOT/../artifacts/Overmark-1.4.0.apk" 2>/dev/null || true
+"$BT/apksigner" verify --verbose "$ROOT/../public/overmark-1.4.0.apk"
+"$BT/aapt" dump badging "$ROOT/../public/overmark-1.4.0.apk" | head -n 20
+ls -lh "$ROOT/../public/overmark-1.4.0.apk"

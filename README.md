@@ -28,6 +28,17 @@ This is an open source project. Everyone is invited to contribute.
 
 Repository: https://github.com/Claudiu1975/Overmark
 
+License: [Apache-2.0](LICENSE).
+
+## F-Droid
+
+The Android app is prepared for F-Droid. Store text and the icon live in `fastlane/metadata/android/en-US/`. The metadata file to submit is [fdroid/com.overmark.app.yml](fdroid/com.overmark.app.yml). Tag `v1.4.0` is the build F-Droid should compile.
+
+```bash
+cd android
+./gradlew assembleRelease
+```
+
 ## Version archive
 
 | Version | Package |

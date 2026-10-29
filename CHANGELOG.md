@@ -2,6 +2,12 @@
 
 Each version stays available. A newer build does not remove older packages.
 
+## 1.4.0
+
+- The Android app builds with Gradle, so F-Droid can compile it from this repository.
+- Licensed under Apache-2.0.
+- Unused network permissions are gone. The app still does not upload anything.
+
 ## 1.3.0
 
 - Opens directly on the speed screen, in the language of this device. The language list is no longer the first screen.
