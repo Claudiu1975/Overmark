@@ -43,6 +43,7 @@ cd android
 
 | Version | Package |
 | --- | --- |
+| 1.4.0 | [public/overmark-1.4.0.apk](public/overmark-1.4.0.apk) |
 | 1.3.0 | [public/overmark-1.3.0.apk](public/overmark-1.3.0.apk) |
 | 1.2.0 | [public/overmark-1.2.0.apk](public/overmark-1.2.0.apk) |
 | 1.1.0 | [public/overmark-1.1.0.apk](public/overmark-1.1.0.apk) |
@@ -58,6 +59,6 @@ npm install
 npm run dev
 ```
 
-The current signed Android package is [public/overmark-1.3.0.apk](public/overmark-1.3.0.apk). It needs Android 8 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission.
+The current signed Android package is [public/overmark-1.4.0.apk](public/overmark-1.4.0.apk). It needs Android 8 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission.
 
 To rebuild the APK, install Android SDK platform 34 and build-tools 34.0.0, then run `android/build.sh`. The debug keystore is created on the first build. The script writes the new package and leaves every older package in place.

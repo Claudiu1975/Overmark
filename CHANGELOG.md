@@ -8,6 +8,8 @@ Each version stays available. A newer build does not remove older packages.
 - Licensed under Apache-2.0.
 - Unused network permissions are gone. The app still does not upload anything.
 
+Package: [public/overmark-1.4.0.apk](public/overmark-1.4.0.apk)
+
 ## 1.3.0
 
 - Opens directly on the speed screen, in the language of this device. The language list is no longer the first screen.

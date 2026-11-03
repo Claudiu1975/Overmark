@@ -285,6 +285,13 @@ export function SpeedScreen() {
         </div>
       </header>
 
+      <Link
+        to="/video"
+        className="flex h-14 items-center justify-center rounded-full bg-signal text-base font-semibold text-bg"
+      >
+        Download the video
+      </Link>
+
       <section className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
         <p
           className={

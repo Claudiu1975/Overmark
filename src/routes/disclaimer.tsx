@@ -28,6 +28,12 @@ function Disclaimer() {
       </section>
 
       <Link
+        to="/privacy"
+        className="inline-flex h-12 items-center justify-center rounded-full border border-line text-sm font-semibold text-fg"
+      >
+        Privacy
+      </Link>
+      <Link
         to="/about"
         className="inline-flex h-12 items-center justify-center rounded-full border border-line text-sm font-semibold text-fg"
       >

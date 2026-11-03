@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.4.0",
+    "file": "overmark-1.4.0.apk",
+    "notes": [
+      "The Android app builds with Gradle, so F-Droid can compile it from this repository.",
+      "Licensed under Apache-2.0.",
+      "Unused network permissions are gone. The app still does not upload anything."
+    ]
+  },
+  {
     "version": "1.3.0",
     "file": "overmark-1.3.0.apk",
     "notes": [
