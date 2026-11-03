@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Gauge, Info } from "lucide-react";
+import { Gauge, Info, Settings as SettingsIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/overmark/i18n";
 import { beep, primeAudio, startAlarm, stopAlarm } from "@/lib/overmark/audio";
@@ -27,9 +27,9 @@ export function SpeedScreen() {
   const [limitKmh, setLimitKmh] = useState(DEFAULT_LIMIT_KMH);
   const [unit, setUnit] = useState<Unit>("kmh");
   const [limitText, setLimitText] = useState(formatLimit(DEFAULT_LIMIT_KMH, "kmh"));
-  const [mode, setMode] = useState<"gps" | "bench">("gps");
+  const [mode, setMode] = useState<"gps" | "test">("gps");
   const [running, setRunning] = useState(false);
-  const [benchKmh, setBenchKmh] = useState(0);
+  const [testKmh, setTestKmh] = useState(0);
   const [gpsKmh, setGpsKmh] = useState(0);
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>("idle");
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -37,6 +37,7 @@ export function SpeedScreen() {
   const [hydrated, setHydrated] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [closed, setClosed] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const overSince = useRef(0);
   const lastBeep = useRef(0);
@@ -62,8 +63,8 @@ export function SpeedScreen() {
     });
   }, [running, mode, closed]);
 
-  const speedKmh = mode === "bench" ? benchKmh : gpsKmh;
-  const hasFix = mode === "bench" ? running : gpsStatus === "fix";
+  const speedKmh = mode === "test" ? testKmh : gpsKmh;
+  const hasFix = mode === "test" ? running : gpsStatus === "fix";
   const over = running && !closed && hasFix && speedKmh > limitKmh;
 
   useEffect(() => {
@@ -236,10 +237,10 @@ export function SpeedScreen() {
             : t("alarm");
 
   const note =
-    mode === "bench"
+    mode === "test"
       ? running
-        ? t("hintBenchOn")
-        : t("hintBenchIdle")
+        ? t("hintTestOn")
+        : t("hintTestIdle")
       : !running
         ? t("hintGpsIdle")
         : gpsStatus === "denied"
@@ -256,41 +257,12 @@ export function SpeedScreen() {
 
   return (
     <main className="deck mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <Gauge className="size-5 text-signal" aria-hidden="true" />
           <p className="text-sm font-semibold tracking-widest text-fg">OVERMARK</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setPicking(true)}
-            className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-4 text-sm text-fg"
-          >
-            {t("language")}
-          </button>
-          <Link
-            to="/about"
-            className="inline-flex h-11 items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm text-fg"
-          >
-            <Info className="size-4 text-signal" aria-hidden="true" />
-            {t("about")}
-          </Link>
-          <Link
-            to="/disclaimer"
-            className="inline-flex h-11 items-center rounded-full border border-line bg-surface px-4 text-sm text-fg"
-          >
-            {t("disclaimerTitle")}
-          </Link>
-        </div>
       </header>
-
-      <Link
-        to="/video"
-        className="flex h-14 items-center justify-center rounded-full bg-signal text-base font-semibold text-bg"
-      >
-        Download the video
-      </Link>
 
       <section className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
         <p
@@ -359,27 +331,27 @@ export function SpeedScreen() {
           GPS
         </UnitButton>
         <UnitButton
-          active={mode === "bench"}
+          active={mode === "test"}
           onClick={() => {
-            setMode("bench");
+            setMode("test");
             setRunning(false);
           }}
         >
-          {t("bench")}
+          {t("test")}
         </UnitButton>
       </div>
 
-      {mode === "bench" ? (
+      {mode === "test" ? (
         <label className="flex flex-col gap-2 text-sm text-muted">
-          {t("benchSpeed")}, {Math.round(toDisplay(benchKmh, unit))} {unitLabel(unit)}
+          {t("testSpeed")}, {Math.round(toDisplay(testKmh, unit))} {unitLabel(unit)}
           <input
             type="range"
             min={0}
             max={250}
-            value={Math.round(toDisplay(benchKmh, unit))}
+            value={Math.round(toDisplay(testKmh, unit))}
             onChange={(e) => {
               const kmh = fromDisplay(Number(e.target.value), unit);
-              setBenchKmh(acceptSpeed(kmh) ? kmh : 0);
+              setTestKmh(acceptSpeed(kmh) ? kmh : 0);
             }}
           />
         </label>
@@ -393,7 +365,7 @@ export function SpeedScreen() {
           (phase === "alarm" ? "bg-alarm text-bg" : "bg-signal text-bg")
         }
       >
-        {running ? t("disarm") : mode === "gps" ? t("armGps") : t("armBench")}
+        {running ? t("disarm") : mode === "gps" ? t("armGps") : t("armTest")}
       </button>
       <div className="flex gap-2">
         <button
@@ -412,6 +384,42 @@ export function SpeedScreen() {
         </button>
       </div>
       <p className="text-center text-sm leading-relaxed text-muted">{note}</p>
+
+      <nav className="flex flex-col gap-2" aria-label={t("settings")}>
+        <button
+          type="button"
+          aria-expanded={settingsOpen}
+          onClick={() => setSettingsOpen((open) => !open)}
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-line bg-surface text-sm font-semibold text-fg"
+        >
+          <SettingsIcon className="size-4 text-signal" aria-hidden="true" />
+          {t("settings")}
+        </button>
+        {settingsOpen ? (
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setPicking(true)}
+              className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-surface text-sm text-fg"
+            >
+              {t("language")}
+            </button>
+            <Link
+              to="/about"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-line bg-surface text-sm text-fg"
+            >
+              <Info className="size-4 text-signal" aria-hidden="true" />
+              {t("about")}
+            </Link>
+            <Link
+              to="/disclaimer"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-surface text-sm text-fg"
+            >
+              {t("disclaimerTitle")}
+            </Link>
+          </div>
+        ) : null}
+      </nav>
     </main>
   );
 }

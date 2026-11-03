@@ -11,10 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
-import { Route as CoffeeRouteImport } from './routes/coffee'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as VideoRouteImport } from './routes/video'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -26,74 +23,40 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CoffeeRoute = CoffeeRouteImport.update({
-  id: '/coffee',
-  path: '/coffee',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DisclaimerRoute = DisclaimerRouteImport.update({
   id: '/disclaimer',
   path: '/disclaimer',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const VideoRoute = VideoRouteImport.update({
-  id: '/video',
-  path: '/video',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/coffee': typeof CoffeeRoute
   '/disclaimer': typeof DisclaimerRoute
-  '/privacy': typeof PrivacyRoute
-  '/video': typeof VideoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/coffee': typeof CoffeeRoute
   '/disclaimer': typeof DisclaimerRoute
-  '/privacy': typeof PrivacyRoute
-  '/video': typeof VideoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/coffee': typeof CoffeeRoute
   '/disclaimer': typeof DisclaimerRoute
-  '/privacy': typeof PrivacyRoute
-  '/video': typeof VideoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/coffee' | '/disclaimer' | '/privacy' | '/video'
+  fullPaths: '/' | '/about' | '/disclaimer'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/coffee' | '/disclaimer' | '/privacy' | '/video'
-  id:
-    | '__root__'
-    | '/'
-    | '/about'
-    | '/coffee'
-    | '/disclaimer'
-    | '/privacy'
-    | '/video'
+  to: '/' | '/about' | '/disclaimer'
+  id: '__root__' | '/' | '/about' | '/disclaimer'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  CoffeeRoute: typeof CoffeeRoute
   DisclaimerRoute: typeof DisclaimerRoute
-  PrivacyRoute: typeof PrivacyRoute
-  VideoRoute: typeof VideoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -112,32 +75,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/coffee': {
-      id: '/coffee'
-      path: '/coffee'
-      fullPath: '/coffee'
-      preLoaderRoute: typeof CoffeeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/disclaimer': {
       id: '/disclaimer'
       path: '/disclaimer'
       fullPath: '/disclaimer'
       preLoaderRoute: typeof DisclaimerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/video': {
-      id: '/video'
-      path: '/video'
-      fullPath: '/video'
-      preLoaderRoute: typeof VideoRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -146,10 +88,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  CoffeeRoute: CoffeeRoute,
   DisclaimerRoute: DisclaimerRoute,
-  PrivacyRoute: PrivacyRoute,
-  VideoRoute: VideoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

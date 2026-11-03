@@ -4,17 +4,16 @@ Each version stays available. A newer build does not remove older packages.
 
 ## 1.5.0
 
-- A Privacy page is inside the Android app. Open it from the speed screen, or from the disclaimer.
-
-Package: [public/overmark-1.5.0.apk](public/overmark-1.5.0.apk)
+- Language, About and Disclaimer are no longer at the top of the screen. They are a sub menu of Settings, and Settings is at the bottom.
+- Bench is now called Test.
+- The language list keeps European languages only.
+- The author, coffee and PayPal sections are gone. About shows goanga.ro and admin@goanga.ro.
 
 ## 1.4.0
 
 - The Android app builds with Gradle, so F-Droid can compile it from this repository.
 - Licensed under Apache-2.0.
 - Unused network permissions are gone. The app still does not upload anything.
-
-Package: [public/overmark-1.4.0.apk](public/overmark-1.4.0.apk)
 
 ## 1.3.0
 

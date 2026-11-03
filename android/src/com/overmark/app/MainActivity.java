@@ -12,8 +12,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.location.Location;
@@ -38,8 +36,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
-import android.widget.HorizontalScrollView;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
@@ -60,7 +56,8 @@ public class MainActivity extends Activity implements LocationListener {
     private static final int REQ_NOTIFY = 11;
     private static final int ALERT_ID = 8;
     private static final String ALERT_CHANNEL = "overmark-alert";
-    private static final String PAYPAL = "https://www.paypal.me/G0anga";
+    private static final String BRAND = "goanga.ro";
+    private static final String CONTACT_EMAIL = "admin@goanga.ro";
     private static final String REPO = "https://github.com/Claudiu1975/Overmark";
     private static final String PREFS = "overmark";
     private static final int COLOR_BG = 0xFF12110E;
@@ -86,22 +83,21 @@ public class MainActivity extends Activity implements LocationListener {
     private PaceRail rail;
     private Button armButton;
     private Button gpsButton;
-    private Button benchButton;
+    private Button testButton;
     private Button kmhButton;
     private Button mphButton;
-    private SeekBar benchBar;
-    private TextView benchLabel;
+    private SeekBar testBar;
+    private TextView testLabel;
     private GradientDrawable armBg;
     private View mainPane;
     private View aboutPane;
     private View disclaimerPane;
-    private View privacyPane;
 
     private float limitKmh = 90f;
     private float speedKmh;
-    private float benchKmh;
+    private float testKmh;
     private boolean mph;
-    private boolean bench;
+    private boolean testMode;
     private boolean tracking;
     private boolean hasFix;
     private boolean alarming;
@@ -119,13 +115,15 @@ public class MainActivity extends Activity implements LocationListener {
     private Button backButton;
     private Button disclaimerBack;
     private Button disclaimerAbout;
-    private Button privacyButton;
-    private Button privacyBack;
-    private TextView privacyBody;
     private TextView limitLabel;
     private TextView aboutVersion;
-    private TextView aboutAuthorKicker;
-    private TextView aboutAuthor;
+    private TextView contactKicker;
+    private TextView contactBrand;
+    private Button emailButton;
+    private View settingsPane;
+    private Button settingsButton;
+    private Button settingsBack;
+    private TextView settingsTitle;
     private TextView aboutDisclaimerTitle;
     private TextView aboutDisclaimer;
     private TextView aboutPrivacyTitle;
@@ -137,18 +135,14 @@ public class MainActivity extends Activity implements LocationListener {
     private TextView archiveIntroView;
     private final ArrayList<Button> archiveDownloads = new ArrayList<Button>();
     private TextView aboutStory;
-    private TextView aboutAuthorStory;
-    private TextView aboutCoffee;
     private TextView aboutOpen;
-    private Button coffeeButton;
     private Button sourceButton;
-    private ImageView qrView;
     private TextView langTitle;
     private TextView langHint;
     private EditText langSearch;
     private View langPane;
     private View rootView;
-    private String versionName = "1.3.0";
+    private String versionName = "1.5.0";
     private BroadcastReceiver screenReceiver;
     private boolean alertPosted;
     private long lastAlertAt;
@@ -156,7 +150,7 @@ public class MainActivity extends Activity implements LocationListener {
     private final Runnable uiTick = new Runnable() {
         @Override
         public void run() {
-            if (tracking) sample(speedKmh, hasFix || bench);
+            if (tracking) sample(speedKmh, hasFix || testMode);
             else paint();
             handler.postDelayed(this, 100L);
         }
@@ -194,7 +188,7 @@ public class MainActivity extends Activity implements LocationListener {
             PackageInfo info = getPackageManager().getPackageInfo(getPackageName(), 0);
             if (info.versionName != null) versionName = info.versionName;
         } catch (PackageManager.NameNotFoundException ignored) {
-            versionName = "1.3.0";
+            versionName = "1.5.0";
         }
 
         getWindow().setStatusBarColor(COLOR_BG);
@@ -202,8 +196,8 @@ public class MainActivity extends Activity implements LocationListener {
 
         if (savedInstanceState != null) {
             tracking = savedInstanceState.getBoolean("tracking");
-            bench = savedInstanceState.getBoolean("benchMode");
-            benchKmh = savedInstanceState.getFloat("benchSpeed");
+            testMode = savedInstanceState.getBoolean("testMode");
+            testKmh = savedInstanceState.getFloat("testSpeed");
             speedKmh = savedInstanceState.getFloat("speed");
             hasFix = savedInstanceState.getBoolean("fix");
             overSince = savedInstanceState.getLong("overSince", -1L);
@@ -225,22 +219,22 @@ public class MainActivity extends Activity implements LocationListener {
         mainPane = buildMain();
         aboutPane = buildAbout();
         disclaimerPane = buildDisclaimer();
-        privacyPane = buildPrivacy();
         langPane = buildLanguage();
+        settingsPane = buildSettings();
+        settingsPane.setVisibility(View.GONE);
         aboutPane.setVisibility(View.GONE);
         disclaimerPane.setVisibility(View.GONE);
-        privacyPane.setVisibility(View.GONE);
         langPane.setVisibility(View.GONE);
         root.addView(mainPane);
         root.addView(aboutPane);
         root.addView(disclaimerPane);
-        root.addView(privacyPane);
         root.addView(langPane);
+        root.addView(settingsPane);
         applyDirection();
         setContentView(root);
         registerScreenWatch();
 
-        if (tracking && !bench) beginGps();
+        if (tracking && !testMode) beginGps();
         if (alarming) {
             if (sound != null) sound.startAlarm();
             handler.post(flashTick);
@@ -252,15 +246,15 @@ public class MainActivity extends Activity implements LocationListener {
     @Override
     protected void onResume() {
         super.onResume();
-        if (tracking && !bench && permissionGranted()) beginGps();
+        if (tracking && !testMode && permissionGranted()) beginGps();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle out) {
         super.onSaveInstanceState(out);
         out.putBoolean("tracking", tracking);
-        out.putBoolean("benchMode", bench);
-        out.putFloat("benchSpeed", benchKmh);
+        out.putBoolean("testMode", testMode);
+        out.putFloat("testSpeed", testKmh);
         out.putFloat("speed", speedKmh);
         out.putBoolean("fix", hasFix);
         out.putLong("overSince", overSince);
@@ -298,12 +292,12 @@ public class MainActivity extends Activity implements LocationListener {
             showDisclaimer(false);
             return;
         }
-        if (privacyPane.getVisibility() == View.VISIBLE) {
-            showPrivacy(false);
-            return;
-        }
         if (aboutPane.getVisibility() == View.VISIBLE) {
             showAbout(false);
+            return;
+        }
+        if (settingsPane.getVisibility() == View.VISIBLE) {
+            showSettings(false);
             return;
         }
         super.onBackPressed();
@@ -311,7 +305,7 @@ public class MainActivity extends Activity implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
-        if (!tracking || bench || location == null) return;
+        if (!tracking || testMode || location == null) return;
         float kmh;
         if (location.hasSpeed()) {
             kmh = Math.max(0f, location.getSpeed()) * 3.6f;
@@ -344,7 +338,7 @@ public class MainActivity extends Activity implements LocationListener {
 
     @Override
     public void onProviderDisabled(String provider) {
-        if (tracking && !bench) {
+        if (tracking && !testMode) {
             hasFix = false;
             paint();
         }
@@ -434,8 +428,8 @@ public class MainActivity extends Activity implements LocationListener {
         tracking = true;
         resetPace();
         keepScreen();
-        if (bench) {
-            sample(benchKmh, true);
+        if (testMode) {
+            sample(testKmh, true);
             return;
         }
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -456,7 +450,7 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void beginGps() {
-        if (!tracking || bench) return;
+        if (!tracking || testMode) return;
         if (locations == null) return;
         boolean enabled;
         try {
@@ -545,7 +539,7 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void syncAlert() {
-        boolean show = tracking && !bench && hasFix && Pace.overLimit(speedKmh, limitKmh) && screenIsOff();
+        boolean show = tracking && !testMode && hasFix && Pace.overLimit(speedKmh, limitKmh) && screenIsOff();
         if (!show) {
             cancelAlert();
             return;
@@ -621,13 +615,13 @@ public class MainActivity extends Activity implements LocationListener {
         if (mph == next) return;
         mph = next;
         prefs.edit().putBoolean("mph", mph).apply();
-        if (benchBar != null) benchBar.setProgress(Math.round(Pace.toDisplay(benchKmh, mph)));
+        if (testBar != null) testBar.setProgress(Math.round(Pace.toDisplay(testKmh, mph)));
         paint();
     }
 
-    private void setBenchMode(boolean next) {
-        if (bench == next && !tracking) {
-            bench = next;
+    private void setTestMode(boolean next) {
+        if (testMode == next && !tracking) {
+            testMode = next;
             paint();
             return;
         }
@@ -636,25 +630,25 @@ public class MainActivity extends Activity implements LocationListener {
         stopKeepAlive();
         resetPace();
         clearKeepScreen();
-        bench = next;
+        testMode = next;
         hasFix = false;
         paint();
     }
 
     private void showAbout(boolean show) {
-        showPane(show ? aboutPane : null);
+        showPane(show ? aboutPane : settingsPane);
     }
 
     private void showDisclaimer(boolean show) {
-        showPane(show ? disclaimerPane : null);
-    }
-
-    private void showPrivacy(boolean show) {
-        showPane(show ? privacyPane : null);
+        showPane(show ? disclaimerPane : settingsPane);
     }
 
     private void showLang(boolean show) {
-        showPane(show ? langPane : null);
+        showPane(show ? langPane : settingsPane);
+    }
+
+    private void showSettings(boolean show) {
+        showPane(show ? settingsPane : null);
     }
 
     private void showPane(View pane) {
@@ -663,10 +657,8 @@ public class MainActivity extends Activity implements LocationListener {
         if (disclaimerPane != null) {
             disclaimerPane.setVisibility(pane == disclaimerPane ? View.VISIBLE : View.GONE);
         }
-        if (privacyPane != null) {
-            privacyPane.setVisibility(pane == privacyPane ? View.VISIBLE : View.GONE);
-        }
         if (langPane != null) langPane.setVisibility(pane == langPane ? View.VISIBLE : View.GONE);
+        if (settingsPane != null) settingsPane.setVisibility(pane == settingsPane ? View.VISIBLE : View.GONE);
     }
 
     private void applyDirection() {
@@ -686,7 +678,7 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void minimize() {
-        if (tracking && !bench) startKeepAlive();
+        if (tracking && !testMode) startKeepAlive();
         moveTaskToBack(true);
     }
 
@@ -747,7 +739,7 @@ public class MainActivity extends Activity implements LocationListener {
 
     private void paint() {
         long elapsed = overSince >= 0L ? SystemClock.elapsedRealtime() - overSince : 0L;
-        boolean over = tracking && (hasFix || bench) && Pace.overLimit(speedKmh, limitKmh) && overSince >= 0L;
+        boolean over = tracking && (hasFix || testMode) && Pace.overLimit(speedKmh, limitKmh) && overSince >= 0L;
         int shown = Math.round(Pace.toDisplay(speedKmh, mph));
         String unit = mph ? "mph" : "km/h";
 
@@ -762,15 +754,15 @@ public class MainActivity extends Activity implements LocationListener {
         elapsedView.setText(String.format(Locale.US, "%.1f s", elapsed / 1000.0));
         rail.setState(Pace.filledMarks(elapsed, over), alarming);
         limitView.setText(String.format(Locale.US, "%.1f", Pace.toDisplay(limitKmh, mph)));
-        styleChoice(gpsButton, !bench);
-        styleChoice(benchButton, bench);
+        styleChoice(gpsButton, !testMode);
+        styleChoice(testButton, testMode);
         styleChoice(kmhButton, !mph);
         styleChoice(mphButton, mph);
-        benchBar.setVisibility(bench ? View.VISIBLE : View.GONE);
-        benchLabel.setVisibility(bench ? View.VISIBLE : View.GONE);
-        benchLabel.setText(I18n.t("benchSpeed") + "  " + Math.round(Pace.toDisplay(benchKmh, mph)) + " " + unit);
+        testBar.setVisibility(testMode ? View.VISIBLE : View.GONE);
+        testLabel.setVisibility(testMode ? View.VISIBLE : View.GONE);
+        testLabel.setText(I18n.t("testSpeed") + "  " + Math.round(Pace.toDisplay(testKmh, mph)) + " " + unit);
         armBg.setColor(alarming ? COLOR_ALARM : COLOR_SIGNAL);
-        if (!tracking) armButton.setText(bench ? I18n.t("armBench") : I18n.t("armGps"));
+        if (!tracking) armButton.setText(testMode ? I18n.t("armTest") : I18n.t("armGps"));
         else armButton.setText(I18n.t("disarm"));
         hintView.setText(hintText());
         relabel();
@@ -780,11 +772,9 @@ public class MainActivity extends Activity implements LocationListener {
     private void relabel() {
         if (aboutButton != null) aboutButton.setText(I18n.t("about"));
         if (disclaimerButton != null) disclaimerButton.setText(I18n.t("disclaimerTitle"));
-        if (privacyButton != null) privacyButton.setText("Privacy");
-        if (privacyBack != null) privacyBack.setText(I18n.t("back"));
         if (langButton != null) langButton.setText(I18n.t("language"));
         if (gpsButton != null) gpsButton.setText("GPS");
-        if (benchButton != null) benchButton.setText(I18n.t("bench"));
+        if (testButton != null) testButton.setText(I18n.t("test"));
         if (exitButton != null) exitButton.setText(I18n.t("exit"));
         if (minimizeButton != null) minimizeButton.setText(I18n.t("minimize"));
         if (limitLabel != null) limitLabel.setText(I18n.t("limit"));
@@ -794,17 +784,13 @@ public class MainActivity extends Activity implements LocationListener {
         if (disclaimerBack != null) disclaimerBack.setText(I18n.t("back"));
         if (disclaimerAbout != null) disclaimerAbout.setText(I18n.t("about"));
         if (aboutVersion != null) aboutVersion.setText(I18n.t("version") + " " + versionName);
-        if (aboutAuthorKicker != null) aboutAuthorKicker.setText(I18n.t("author"));
-        if (aboutAuthor != null) aboutAuthor.setText("Claudiu Ivan");
+        if (contactKicker != null) contactKicker.setText(I18n.t("contact"));
+        if (settingsButton != null) settingsButton.setText(I18n.t("settings"));
+        if (settingsBack != null) settingsBack.setText(I18n.t("back"));
+        if (settingsTitle != null) settingsTitle.setText(I18n.t("settings"));
         if (aboutStory != null) aboutStory.setText(I18n.t("appStory"));
-        if (aboutAuthorStory != null) {
-            aboutAuthorStory.setText(I18n.t("authorStory").replace("Claudiu Florian Ivan", "Claudiu Ivan"));
-        }
-        if (aboutCoffee != null) aboutCoffee.setText(I18n.t("coffeeInvite"));
         if (aboutOpen != null) aboutOpen.setText(I18n.t("openSource"));
-        if (coffeeButton != null) coffeeButton.setText(I18n.t("coffeeButton"));
         if (sourceButton != null) sourceButton.setText(I18n.t("sourceCode"));
-        if (qrView != null) qrView.setContentDescription(I18n.t("coffeeButton"));
         if (aboutDisclaimerTitle != null) aboutDisclaimerTitle.setText(I18n.t("disclaimerTitle"));
         if (aboutDisclaimer != null) aboutDisclaimer.setText(I18n.t("disclaimer"));
         if (aboutPrivacyTitle != null) aboutPrivacyTitle.setText(I18n.t("privacyTitle"));
@@ -827,19 +813,20 @@ public class MainActivity extends Activity implements LocationListener {
         if (aboutPane != null && aboutPane.getVisibility() == View.VISIBLE) return "";
         if (disclaimerPane != null && disclaimerPane.getVisibility() == View.VISIBLE) return "";
         if (langPane != null && langPane.getVisibility() == View.VISIBLE) return "";
+        if (settingsPane != null && settingsPane.getVisibility() == View.VISIBLE) return "";
         if (!tracking) return I18n.t("standby");
-        if (!bench && !hasFix) return I18n.t("searching");
+        if (!testMode && !hasFix) return I18n.t("searching");
         if (alarming) return I18n.t("alarm");
         if (hasFix && Pace.overLimit(speedKmh, limitKmh)) return I18n.t("marking");
         return I18n.t("under");
     }
 
     private String hintText() {
-        if (!tracking && bench) return I18n.t("hintBenchIdle");
+        if (!tracking && testMode) return I18n.t("hintTestIdle");
         if (!tracking) return I18n.t("hintGpsIdle");
-        if (!bench && !permissionGranted()) return I18n.t("hintDenied");
-        if (!bench && !gpsReady()) return I18n.t("hintNoFix");
-        if (!bench && !hasFix) return I18n.t("hintSearch");
+        if (!testMode && !permissionGranted()) return I18n.t("hintDenied");
+        if (!testMode && !gpsReady()) return I18n.t("hintNoFix");
+        if (!testMode && !hasFix) return I18n.t("hintSearch");
         if (alarming) return I18n.t("hintAlarm");
         return I18n.t("hintLive");
     }
@@ -866,48 +853,6 @@ public class MainActivity extends Activity implements LocationListener {
         TextView title = label("OVERMARK", 14, COLOR_FG, true);
         title.setLetterSpacing(0.18f);
         col.addView(title);
-
-        HorizontalScrollView navScroll = new HorizontalScrollView(this);
-        navScroll.setHorizontalScrollBarEnabled(false);
-        LinearLayout nav = row();
-        nav.setPadding(0, dp(12), 0, 0);
-        langButton = chip(I18n.t("language"), false);
-        langButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showLang(true);
-            }
-        });
-        aboutButton = chip(I18n.t("about"), false);
-        aboutButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showAbout(true);
-            }
-        });
-        disclaimerButton = chip(I18n.t("disclaimerTitle"), false);
-        disclaimerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDisclaimer(true);
-            }
-        });
-        nav.addView(langButton);
-        nav.addView(gap(8));
-        nav.addView(aboutButton);
-        nav.addView(gap(8));
-        nav.addView(disclaimerButton);
-        nav.addView(gap(8));
-        privacyButton = chip("Privacy", false);
-        privacyButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showPrivacy(true);
-            }
-        });
-        nav.addView(privacyButton);
-        navScroll.addView(nav);
-        col.addView(navScroll);
 
         statusView = label("STANDBY", 12, COLOR_MUTED, true);
         statusView.setLetterSpacing(0.16f);
@@ -1010,42 +955,42 @@ public class MainActivity extends Activity implements LocationListener {
         LinearLayout modes = row();
         modes.setPadding(0, dp(12), 0, 0);
         gpsButton = chip("GPS", true);
-        benchButton = chip("Bench", false);
+        testButton = chip("Test", false);
         LinearLayout.LayoutParams half = new LinearLayout.LayoutParams(0, dp(48), 1f);
         gpsButton.setLayoutParams(half);
         LinearLayout.LayoutParams half2 = new LinearLayout.LayoutParams(0, dp(48), 1f);
         half2.leftMargin = dp(8);
-        benchButton.setLayoutParams(half2);
+        testButton.setLayoutParams(half2);
         gpsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setBenchMode(false);
+                setTestMode(false);
             }
         });
-        benchButton.setOnClickListener(new View.OnClickListener() {
+        testButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setBenchMode(true);
+                setTestMode(true);
             }
         });
         modes.addView(gpsButton);
-        modes.addView(benchButton);
+        modes.addView(testButton);
         col.addView(modes);
 
-        benchLabel = label("", 14, COLOR_MUTED, false);
-        benchLabel.setPadding(0, dp(12), 0, 0);
-        col.addView(benchLabel);
-        benchBar = new SeekBar(this);
-        benchBar.setMax(250);
-        benchBar.setProgress(0);
-        benchBar.setProgressTintList(android.content.res.ColorStateList.valueOf(COLOR_SIGNAL));
-        benchBar.setThumbTintList(android.content.res.ColorStateList.valueOf(COLOR_SIGNAL));
-        benchBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        testLabel = label("", 14, COLOR_MUTED, false);
+        testLabel.setPadding(0, dp(12), 0, 0);
+        col.addView(testLabel);
+        testBar = new SeekBar(this);
+        testBar.setMax(250);
+        testBar.setProgress(0);
+        testBar.setProgressTintList(android.content.res.ColorStateList.valueOf(COLOR_SIGNAL));
+        testBar.setThumbTintList(android.content.res.ColorStateList.valueOf(COLOR_SIGNAL));
+        testBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (!fromUser) return;
-                benchKmh = Pace.fromDisplay(progress, mph);
-                if (tracking && bench) sample(benchKmh, true);
+                testKmh = Pace.fromDisplay(progress, mph);
+                if (tracking && testMode) sample(testKmh, true);
                 else paint();
             }
 
@@ -1055,7 +1000,7 @@ public class MainActivity extends Activity implements LocationListener {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {}
         });
-        col.addView(benchBar);
+        col.addView(testBar);
 
         armButton = new Button(this);
         armButton.setAllCaps(false);
@@ -1111,8 +1056,83 @@ public class MainActivity extends Activity implements LocationListener {
         hintView.setLineSpacing(dp(3), 1f);
         col.addView(hintView);
 
+        settingsButton = chip(I18n.t("settings"), false);
+        LinearLayout.LayoutParams settingsLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
+        settingsLp.topMargin = dp(22);
+        settingsButton.setLayoutParams(settingsLp);
+        settingsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showSettings(true);
+            }
+        });
+        col.addView(settingsButton);
+
         scroll.addView(col, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.MATCH_PARENT));
+        return scroll;
+    }
+
+    /** Sub menu of Settings: Language, About, Disclaimer. */
+    private View buildSettings() {
+        ScrollView scroll = new ScrollView(this);
+        scroll.setBackgroundColor(COLOR_BG);
+        LinearLayout col = column();
+        col.setPadding(dp(20), dp(18), dp(20), dp(28));
+
+        settingsBack = chip(I18n.t("back"), false);
+        settingsBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showSettings(false);
+            }
+        });
+        col.addView(settingsBack);
+
+        TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
+        kicker.setLetterSpacing(0.18f);
+        kicker.setPadding(0, dp(28), 0, dp(8));
+        col.addView(kicker);
+        col.addView(bar());
+
+        settingsTitle = label(I18n.t("settings"), 36, COLOR_FG, true);
+        settingsTitle.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        settingsTitle.setPadding(0, 0, 0, dp(10));
+        col.addView(settingsTitle);
+
+        langButton = chip(I18n.t("language"), false);
+        langButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showLang(true);
+            }
+        });
+        aboutButton = chip(I18n.t("about"), false);
+        aboutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAbout(true);
+            }
+        });
+        disclaimerButton = chip(I18n.t("disclaimerTitle"), false);
+        disclaimerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDisclaimer(true);
+            }
+        });
+        Button[] items = new Button[] {langButton, aboutButton, disclaimerButton};
+        for (int i = 0; i < items.length; i++) {
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, dp(52));
+            lp.topMargin = dp(10);
+            items[i].setLayoutParams(lp);
+            col.addView(items[i]);
+        }
+
+        scroll.addView(col, new ScrollView.LayoutParams(
+                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
         return scroll;
     }
 
@@ -1168,101 +1188,28 @@ public class MainActivity extends Activity implements LocationListener {
         });
         col.addView(sourceButton);
 
-        aboutAuthorKicker = label(I18n.t("author"), 12, COLOR_MUTED, true);
-        aboutAuthorKicker.setLetterSpacing(0.16f);
-        aboutAuthorKicker.setPadding(0, dp(56), 0, dp(8));
-        col.addView(aboutAuthorKicker);
+        contactKicker = label(I18n.t("contact"), 12, COLOR_MUTED, true);
+        contactKicker.setLetterSpacing(0.16f);
+        contactKicker.setPadding(0, dp(56), 0, dp(8));
+        col.addView(contactKicker);
         col.addView(bar());
 
-        aboutAuthor = label("Claudiu Ivan", 36, COLOR_FG, true);
-        aboutAuthor.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
-        col.addView(aboutAuthor);
+        contactBrand = label(BRAND, 36, COLOR_FG, true);
+        contactBrand.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        col.addView(contactBrand);
 
-        aboutAuthorStory = label(I18n.t("authorStory").replace("Claudiu Florian Ivan", "Claudiu Ivan"), 16, COLOR_MUTED, false);
-        aboutAuthorStory.setPadding(0, dp(10), 0, 0);
-        aboutAuthorStory.setLineSpacing(dp(4), 1f);
-        col.addView(aboutAuthorStory);
-
-        aboutCoffee = label(I18n.t("coffeeInvite"), 16, COLOR_FG, false);
-        aboutCoffee.setPadding(0, dp(14), 0, dp(10));
-        aboutCoffee.setLineSpacing(dp(4), 1f);
-        col.addView(aboutCoffee);
-
-        coffeeButton = chip(I18n.t("coffeeButton"), true);
-        LinearLayout.LayoutParams coffeeLp = new LinearLayout.LayoutParams(
+        emailButton = chip(CONTACT_EMAIL, true);
+        LinearLayout.LayoutParams emailLp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, dp(52));
-        coffeeButton.setLayoutParams(coffeeLp);
-        coffeeButton.setOnClickListener(new View.OnClickListener() {
+        emailLp.topMargin = dp(14);
+        emailButton.setLayoutParams(emailLp);
+        emailButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openUrl(PAYPAL);
+                openUrl("mailto:" + CONTACT_EMAIL);
             }
         });
-        col.addView(coffeeButton);
-
-        try {
-            InputStream in = getAssets().open("paypal-qr.png");
-            Bitmap bitmap = BitmapFactory.decodeStream(in);
-            in.close();
-            qrView = new ImageView(this);
-            qrView.setImageBitmap(bitmap);
-            qrView.setAdjustViewBounds(true);
-            qrView.setContentDescription(I18n.t("coffeeButton"));
-            qrView.setBackgroundColor(0xFFFFFFFF);
-            LinearLayout.LayoutParams qrLp = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            qrLp.topMargin = dp(22);
-            qrView.setLayoutParams(qrLp);
-            qrView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    openUrl(PAYPAL);
-                }
-            });
-            col.addView(qrView);
-        } catch (Exception ignored) {
-            qrView = null;
-        }
-
-        scroll.addView(col, new ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
-        return scroll;
-    }
-
-    private View buildPrivacy() {
-        ScrollView scroll = new ScrollView(this);
-        scroll.setBackgroundColor(COLOR_BG);
-        LinearLayout col = column();
-        col.setPadding(dp(20), dp(18), dp(20), dp(28));
-
-        privacyBack = chip(I18n.t("back"), false);
-        privacyBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showPrivacy(false);
-            }
-        });
-        col.addView(privacyBack);
-
-        TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
-        kicker.setLetterSpacing(0.18f);
-        kicker.setPadding(0, dp(28), 0, dp(6));
-        col.addView(kicker);
-
-        TextView title = label("Privacy", 36, COLOR_FG, true);
-        title.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
-        col.addView(title);
-
-        String body = "Privacy";
-        try {
-            body = readAsset("privacy.txt").trim();
-        } catch (Exception ignored) {
-            body = I18n.t("privacy");
-        }
-        privacyBody = label(body, 16, COLOR_FG, false);
-        privacyBody.setPadding(0, dp(16), 0, 0);
-        privacyBody.setLineSpacing(dp(4), 1f);
-        col.addView(privacyBody);
+        col.addView(emailButton);
 
         scroll.addView(col, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
@@ -1330,19 +1277,6 @@ public class MainActivity extends Activity implements LocationListener {
             }
         });
         col.addView(toAbout);
-
-        Button toPrivacy = chip("Privacy", false);
-        LinearLayout.LayoutParams privacyLp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
-        privacyLp.topMargin = dp(10);
-        toPrivacy.setLayoutParams(privacyLp);
-        toPrivacy.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showPrivacy(true);
-            }
-        });
-        col.addView(toPrivacy);
 
         scroll.addView(col, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));

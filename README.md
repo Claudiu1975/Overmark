@@ -8,19 +8,18 @@ If the screen is off and speed is over the limit, Overmark posts a notification.
 
 Disclaimer and About are separate pages.
 
-## What's new in 1.3.0
+## What's new in 1.5.0
 
-- Opens directly on the speed screen, in the language of this device. The language list is no longer the first screen.
-- Disclaimer and About are separate pages.
-- What's new is recorded for this version, and every published package stays in the archive.
+- Language, About and Disclaimer are a sub menu of Settings, and Settings is at the bottom of the screen.
+- Bench is now called Test.
+- European languages only.
+- Contact: goanga.ro, admin@goanga.ro.
 
 The full archive is [CHANGELOG.md](CHANGELOG.md).
 
-## About the author
+## Contact
 
-Claudiu Florian Ivan is a truck driver with a passion for technology.
-
-If Overmark helps you on the road, you can buy him a coffee: https://www.paypal.me/G0anga
+goanga.ro · admin@goanga.ro
 
 ## Open source
 
@@ -43,8 +42,6 @@ cd android
 
 | Version | Package |
 | --- | --- |
-| 1.5.0 | [public/overmark-1.5.0.apk](public/overmark-1.5.0.apk) |
-| 1.4.0 | [public/overmark-1.4.0.apk](public/overmark-1.4.0.apk) |
 | 1.3.0 | [public/overmark-1.3.0.apk](public/overmark-1.3.0.apk) |
 | 1.2.0 | [public/overmark-1.2.0.apk](public/overmark-1.2.0.apk) |
 | 1.1.0 | [public/overmark-1.1.0.apk](public/overmark-1.1.0.apk) |
@@ -53,13 +50,13 @@ A newer build does not remove older packages.
 
 ## Try it
 
-The web app includes a Bench mode so the timer can be heard without driving.
+The web app includes a Test mode so the timer can be heard without driving.
 
 ```bash
 npm install
 npm run dev
 ```
 
-The current signed Android package is [public/overmark-1.5.0.apk](public/overmark-1.5.0.apk). It needs Android 8 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission.
+The newest signed package in the archive is [public/overmark-1.3.0.apk](public/overmark-1.3.0.apk). Version 1.5.0 has to be built with `android/build.sh` or Gradle. It needs Android 8 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission.
 
 To rebuild the APK, install Android SDK platform 34 and build-tools 34.0.0, then run `android/build.sh`. The debug keystore is created on the first build. The script writes the new package and leaves every older package in place.

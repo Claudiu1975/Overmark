@@ -1,18 +1,11 @@
 [
   {
     "version": "1.5.0",
-    "file": "overmark-1.5.0.apk",
     "notes": [
-      "A Privacy page is inside the app, on the speed screen and on the disclaimer."
-    ]
-  },
-  {
-    "version": "1.4.0",
-    "file": "overmark-1.4.0.apk",
-    "notes": [
-      "The Android app builds with Gradle, so F-Droid can compile it from this repository.",
-      "Licensed under Apache-2.0.",
-      "Unused network permissions are gone. The app still does not upload anything."
+      "Language, About and Disclaimer moved from the top of the screen into Settings, which is now at the bottom.",
+      "Bench is now called Test.",
+      "European languages only.",
+      "Contact is goanga.ro, admin@goanga.ro."
     ]
   },
   {
