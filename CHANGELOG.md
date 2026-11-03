@@ -10,11 +10,15 @@ Each version stays available. A newer build does not remove older packages.
 - The author, coffee and PayPal sections are gone. About shows goanga.ro and admin@goanga.ro.
 - Privacy is back, inside Settings.
 
+Package: [overmark-1.5.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.0/overmark-1.5.0.apk)
+
 ## 1.4.0
 
 - The Android app builds with Gradle, so F-Droid can compile it from this repository.
 - Licensed under Apache-2.0.
 - Unused network permissions are gone. The app still does not upload anything.
+
+Package: [overmark-1.4.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.4.0/overmark-1.4.0.apk)
 
 ## 1.3.0
 

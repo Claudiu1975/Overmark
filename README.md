@@ -42,9 +42,11 @@ cd android
 
 | Version | Package |
 | --- | --- |
-| 1.3.0 | [public/overmark-1.3.0.apk](public/overmark-1.3.0.apk) |
-| 1.2.0 | [public/overmark-1.2.0.apk](public/overmark-1.2.0.apk) |
-| 1.1.0 | [public/overmark-1.1.0.apk](public/overmark-1.1.0.apk) |
+| 1.5.0 | [overmark-1.5.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.0/overmark-1.5.0.apk) |
+| 1.4.0 | [overmark-1.4.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.4.0/overmark-1.4.0.apk) |
+| 1.3.0 | [overmark-1.3.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.3.0/overmark-1.3.0.apk) |
+| 1.2.0 | [overmark-1.2.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.2.0/overmark-1.2.0.apk) |
+| 1.1.0 | [overmark-1.1.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.1.0/overmark-1.1.0.apk) |
 
 A newer build does not remove older packages.
 
@@ -57,6 +59,6 @@ npm install
 npm run dev
 ```
 
-The newest signed package in the archive is [public/overmark-1.3.0.apk](public/overmark-1.3.0.apk). Version 1.5.0 has to be built with `android/build.sh` or Gradle. It needs Android 8 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission.
+The newest signed package in the archive is [overmark-1.5.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.0/overmark-1.5.0.apk). It needs Android 8 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission.
 
 To rebuild the APK, install Android SDK platform 34 and build-tools 34.0.0, then run `android/build.sh`. The debug keystore is created on the first build. The script writes the new package and leaves every older package in place.
