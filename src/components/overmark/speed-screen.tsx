@@ -417,6 +417,12 @@ export function SpeedScreen() {
             >
               {t("disclaimerTitle")}
             </Link>
+            <Link
+              to="/privacy"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-surface text-sm text-fg"
+            >
+              Privacy
+            </Link>
           </div>
         ) : null}
       </nav>

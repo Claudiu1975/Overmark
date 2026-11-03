@@ -1,1 +1,2 @@
-Settings sub menu at the bottom. Bench renamed Test. European languages only. Contact goanga.ro. Version 1.5.0.
+Settings sub menu at the bottom. Bench renamed Test. European languages only. Contact goanga.ro. Privacy is inside Settings. Version 1.5.0.
+

@@ -8,6 +8,7 @@ Each version stays available. A newer build does not remove older packages.
 - Bench is now called Test.
 - The language list keeps European languages only.
 - The author, coffee and PayPal sections are gone. About shows goanga.ro and admin@goanga.ro.
+- Privacy is back, inside Settings.
 
 ## 1.4.0
 

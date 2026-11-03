@@ -92,6 +92,7 @@ public class MainActivity extends Activity implements LocationListener {
     private View mainPane;
     private View aboutPane;
     private View disclaimerPane;
+    private View privacyPane;
 
     private float limitKmh = 90f;
     private float speedKmh;
@@ -107,6 +108,7 @@ public class MainActivity extends Activity implements LocationListener {
     private Location previous;
     private Button aboutButton;
     private Button disclaimerButton;
+    private Button privacyButton;
     private Button langButton;
     private Button minusButton;
     private Button plusButton;
@@ -115,6 +117,7 @@ public class MainActivity extends Activity implements LocationListener {
     private Button backButton;
     private Button disclaimerBack;
     private Button disclaimerAbout;
+    private Button privacyBack;
     private TextView limitLabel;
     private TextView aboutVersion;
     private TextView contactKicker;
@@ -219,15 +222,18 @@ public class MainActivity extends Activity implements LocationListener {
         mainPane = buildMain();
         aboutPane = buildAbout();
         disclaimerPane = buildDisclaimer();
+        privacyPane = buildPrivacy();
         langPane = buildLanguage();
         settingsPane = buildSettings();
         settingsPane.setVisibility(View.GONE);
         aboutPane.setVisibility(View.GONE);
         disclaimerPane.setVisibility(View.GONE);
+        privacyPane.setVisibility(View.GONE);
         langPane.setVisibility(View.GONE);
         root.addView(mainPane);
         root.addView(aboutPane);
         root.addView(disclaimerPane);
+        root.addView(privacyPane);
         root.addView(langPane);
         root.addView(settingsPane);
         applyDirection();
@@ -286,6 +292,10 @@ public class MainActivity extends Activity implements LocationListener {
     public void onBackPressed() {
         if (langPane.getVisibility() == View.VISIBLE) {
             showLang(false);
+            return;
+        }
+        if (privacyPane.getVisibility() == View.VISIBLE) {
+            showPrivacy(false);
             return;
         }
         if (disclaimerPane.getVisibility() == View.VISIBLE) {
@@ -643,6 +653,10 @@ public class MainActivity extends Activity implements LocationListener {
         showPane(show ? disclaimerPane : settingsPane);
     }
 
+    private void showPrivacy(boolean show) {
+        showPane(show ? privacyPane : settingsPane);
+    }
+
     private void showLang(boolean show) {
         showPane(show ? langPane : settingsPane);
     }
@@ -656,6 +670,9 @@ public class MainActivity extends Activity implements LocationListener {
         if (aboutPane != null) aboutPane.setVisibility(pane == aboutPane ? View.VISIBLE : View.GONE);
         if (disclaimerPane != null) {
             disclaimerPane.setVisibility(pane == disclaimerPane ? View.VISIBLE : View.GONE);
+        }
+        if (privacyPane != null) {
+            privacyPane.setVisibility(pane == privacyPane ? View.VISIBLE : View.GONE);
         }
         if (langPane != null) langPane.setVisibility(pane == langPane ? View.VISIBLE : View.GONE);
         if (settingsPane != null) settingsPane.setVisibility(pane == settingsPane ? View.VISIBLE : View.GONE);
@@ -772,6 +789,8 @@ public class MainActivity extends Activity implements LocationListener {
     private void relabel() {
         if (aboutButton != null) aboutButton.setText(I18n.t("about"));
         if (disclaimerButton != null) disclaimerButton.setText(I18n.t("disclaimerTitle"));
+        if (privacyButton != null) privacyButton.setText("Privacy");
+        if (privacyBack != null) privacyBack.setText(I18n.t("back"));
         if (langButton != null) langButton.setText(I18n.t("language"));
         if (gpsButton != null) gpsButton.setText("GPS");
         if (testButton != null) testButton.setText(I18n.t("test"));
@@ -1122,7 +1141,14 @@ public class MainActivity extends Activity implements LocationListener {
                 showDisclaimer(true);
             }
         });
-        Button[] items = new Button[] {langButton, aboutButton, disclaimerButton};
+        privacyButton = chip("Privacy", false);
+        privacyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showPrivacy(true);
+            }
+        });
+        Button[] items = new Button[] {langButton, aboutButton, disclaimerButton, privacyButton};
         for (int i = 0; i < items.length; i++) {
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT, dp(52));
@@ -1130,6 +1156,47 @@ public class MainActivity extends Activity implements LocationListener {
             items[i].setLayoutParams(lp);
             col.addView(items[i]);
         }
+
+        scroll.addView(col, new ScrollView.LayoutParams(
+                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
+        return scroll;
+    }
+
+    private View buildPrivacy() {
+        ScrollView scroll = new ScrollView(this);
+        scroll.setBackgroundColor(COLOR_BG);
+        LinearLayout col = column();
+        col.setPadding(dp(20), dp(18), dp(20), dp(28));
+
+        privacyBack = chip(I18n.t("back"), false);
+        privacyBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showPrivacy(false);
+            }
+        });
+        col.addView(privacyBack);
+
+        TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
+        kicker.setLetterSpacing(0.18f);
+        kicker.setPadding(0, dp(28), 0, dp(8));
+        col.addView(kicker);
+        col.addView(bar());
+
+        TextView title = label("Privacy", 36, COLOR_FG, true);
+        title.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        col.addView(title);
+
+        String body = "Privacy";
+        try {
+            body = readAsset("privacy.txt").trim();
+        } catch (Exception ignored) {
+            body = I18n.t("privacy");
+        }
+        TextView text = label(body, 16, COLOR_FG, false);
+        text.setPadding(0, dp(16), 0, 0);
+        text.setLineSpacing(dp(4), 1f);
+        col.addView(text);
 
         scroll.addView(col, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
