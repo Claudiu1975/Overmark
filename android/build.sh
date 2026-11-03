@@ -89,9 +89,9 @@ mkdir -p "$ROOT/../public" "$ROOT/../artifacts"
 "$BT/apksigner" sign \
   --ks "$KS" --ks-key-alias androiddebugkey \
   --ks-pass pass:android --key-pass pass:android \
-  --out "$ROOT/../public/overmark-1.4.0.apk" \
+  --out "$ROOT/../public/overmark-1.5.0.apk" \
   "$BUILD/aligned.apk"
-cp "$ROOT/../public/overmark-1.4.0.apk" "$ROOT/../artifacts/Overmark-1.4.0.apk" 2>/dev/null || true
-"$BT/apksigner" verify --verbose "$ROOT/../public/overmark-1.4.0.apk"
-"$BT/aapt" dump badging "$ROOT/../public/overmark-1.4.0.apk" | head -n 20
-ls -lh "$ROOT/../public/overmark-1.4.0.apk"
+cp "$ROOT/../public/overmark-1.5.0.apk" "$ROOT/../artifacts/Overmark-1.5.0.apk" 2>/dev/null || true
+"$BT/apksigner" verify --verbose "$ROOT/../public/overmark-1.5.0.apk"
+"$BT/aapt" dump badging "$ROOT/../public/overmark-1.5.0.apk" | head -n 20
+ls -lh "$ROOT/../public/overmark-1.5.0.apk"

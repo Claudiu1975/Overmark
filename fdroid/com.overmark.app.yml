@@ -12,14 +12,14 @@ RepoType: git
 Repo: https://github.com/Claudiu1975/Overmark.git
 
 Builds:
-  - versionName: '1.4.0'
-    versionCode: 5
-    commit: v1.4.0
+  - versionName: '1.5.0'
+    versionCode: 6
+    commit: v1.5.0
     subdir: android
     gradle:
       - yes
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: '1.4.0'
-CurrentVersionCode: 5
+CurrentVersion: '1.5.0'
+CurrentVersionCode: 6

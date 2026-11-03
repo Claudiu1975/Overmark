@@ -2,6 +2,12 @@
 
 Each version stays available. A newer build does not remove older packages.
 
+## 1.5.0
+
+- A Privacy page is inside the Android app. Open it from the speed screen, or from the disclaimer.
+
+Package: [public/overmark-1.5.0.apk](public/overmark-1.5.0.apk)
+
 ## 1.4.0
 
 - The Android app builds with Gradle, so F-Droid can compile it from this repository.

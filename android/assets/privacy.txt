@@ -1,0 +1,27 @@
+Updated 3 November 2026
+
+Overmark is made by Claudiu Ivan. This page describes the Android app. The app does not send your location or your speed to anyone.
+
+What the app is for
+Overmark reads the speed of this device so it can beep while you stay over a limit you choose, and sound an alarm after 45 seconds. That is the whole purpose.
+
+Location
+If you allow location, the app reads GPS on the device to calculate speed in kilometres per hour. The reading is used on screen, for the timer, and for a notification if the screen is off and the speed is over the limit. The app does not save a route, a trip, or a history of positions. Coordinates are not uploaded.
+
+What stays on the device
+Only the language and the speed limit are kept, in the app’s private storage on that device. They are not sent anywhere. When you leave the app, temporary files are cleared. Speed used for the live timer is dropped when the app stops.
+
+What is not collected
+There is no account, no sign-in, and no analytics. There is no advertising and no server run for this app. The app does not sell data, because it does not receive any. It does not ask for your name, email, contacts, photos, or microphone.
+
+Permissions
+Location is used only to measure speed, including while the screen is off if you have armed tracking. Notifications are used to show that the speed is over the limit on the lock screen. Vibration may mark an alert. The app does not use the internet to upload anything. If you open the source-code link or the coffee link, that opens in your browser, under that site’s own policy.
+
+Children
+Overmark is a driving aid for people who operate a vehicle. It is not directed at children, and it does not knowingly collect personal information from children.
+
+Changes
+If this policy changes, the date at the top of this page will change. The app will keep working the same way unless a new version says otherwise.
+
+Contact
+Claudiu Ivan. Questions about this policy can be sent through the project’s issue tracker on GitHub.
