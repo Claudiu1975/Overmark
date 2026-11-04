@@ -2,6 +2,12 @@
 
 Each version stays available. A newer build does not remove older packages.
 
+## overmark-android-7
+
+- Installs on Android 7 and newer. The package version inside the app is 1.5.1.
+
+Package: [overmark-android-7.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.1/overmark-android-7.apk)
+
 ## 1.5.0
 
 - Language, About and Disclaimer are no longer at the top of the screen. They are a sub menu of Settings, and Settings is at the bottom.

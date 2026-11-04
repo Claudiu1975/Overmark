@@ -1,5 +1,13 @@
 [
   {
+    "version": "android-7",
+    "file": "overmark-android-7.apk",
+    "notes": [
+      "The Android 7 build. It installs on Android 7 and newer.",
+      "Package version 1.5.1."
+    ]
+  },
+  {
     "version": "1.5.0",
     "file": "overmark-1.5.0.apk",
     "notes": [

@@ -42,6 +42,7 @@ cd android
 
 | Version | Package |
 | --- | --- |
+| overmark-android-7 | [overmark-android-7.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.1/overmark-android-7.apk) |
 | 1.5.0 | [overmark-1.5.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.0/overmark-1.5.0.apk) |
 | 1.4.0 | [overmark-1.4.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.4.0/overmark-1.4.0.apk) |
 | 1.3.0 | [overmark-1.3.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.3.0/overmark-1.3.0.apk) |
@@ -59,6 +60,6 @@ npm install
 npm run dev
 ```
 
-The newest signed package in the archive is [overmark-1.5.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.0/overmark-1.5.0.apk). It needs Android 8 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission.
+The Android 7 package in the archive is [overmark-android-7.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.1/overmark-android-7.apk). It installs on Android 7 and newer. The current package for newer phones is [overmark-1.5.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.0/overmark-1.5.0.apk). Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission.
 
 To rebuild the APK, install Android SDK platform 34 and build-tools 34.0.0, then run `android/build.sh`. The debug keystore is created on the first build. The script writes the new package and leaves every older package in place.
