@@ -2,11 +2,18 @@
 
 Each version stays available. A newer build does not remove older packages.
 
-## overmark-android-7
+## 1.5.2
 
-- Installs on Android 7 and newer. The package version inside the app is 1.5.1.
+- Test: touching arm raises the simulated speed from 0, reaches the set limit in about 4 seconds and keeps going a little above it, so the alarm starts by itself.
+- Test mode keeps running when the app is minimized, and the lock-screen alert appears when the speed is over the limit.
+- Touching the lock-screen alert opens the app.
 
-Package: [overmark-android-7.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.1/overmark-android-7.apk)
+Package: [public/overmark-1.5.2.apk](public/overmark-1.5.2.apk)
+
+## 1.5.1
+
+- Runs on Android 7.0 and newer (it needed Android 8 before).
+- On Android 7 the alert and the keep-alive notice use the older notification settings, and the vibration uses length only.
 
 ## 1.5.0
 
@@ -14,17 +21,12 @@ Package: [overmark-android-7.apk](https://github.com/Claudiu1975/Overmark/releas
 - Bench is now called Test.
 - The language list keeps European languages only.
 - The author, coffee and PayPal sections are gone. About shows goanga.ro and admin@goanga.ro.
-- Privacy is back, inside Settings.
-
-Package: [overmark-1.5.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.0/overmark-1.5.0.apk)
 
 ## 1.4.0
 
 - The Android app builds with Gradle, so F-Droid can compile it from this repository.
 - Licensed under Apache-2.0.
 - Unused network permissions are gone. The app still does not upload anything.
-
-Package: [overmark-1.4.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.4.0/overmark-1.4.0.apk)
 
 ## 1.3.0
 

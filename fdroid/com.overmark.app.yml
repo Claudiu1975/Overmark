@@ -26,7 +26,21 @@ Builds:
     gradle:
       - yes
 
+  - versionName: '1.5.1'
+    versionCode: 7
+    commit: v1.5.1
+    subdir: android
+    gradle:
+      - yes
+
+  - versionName: '1.5.2'
+    versionCode: 8
+    commit: v1.5.2
+    subdir: android
+    gradle:
+      - yes
+
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: '1.5.0'
-CurrentVersionCode: 6
+CurrentVersion: '1.5.2'
+CurrentVersionCode: 8

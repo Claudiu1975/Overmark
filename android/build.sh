@@ -59,7 +59,7 @@ fi
 "$BT/aapt2" link -o "$BUILD/unsigned.apk" \
   -I "$PLATFORM" \
   --manifest "$ROOT/AndroidManifest.xml" \
-  --min-sdk-version 26 \
+  --min-sdk-version 24 \
   --target-sdk-version 34 \
   -A "$ROOT/assets" \
   "$BUILD/flat/"*.flat
@@ -70,7 +70,7 @@ javac -encoding UTF-8 -source 8 -target 8 \
   -d "$BUILD/classes" \
   @"$BUILD/sources.txt"
 
-"$BT/d8" --lib "$PLATFORM" --min-api 26 --output "$BUILD/dex" \
+"$BT/d8" --lib "$PLATFORM" --min-api 24 --output "$BUILD/dex" \
   $(find "$BUILD/classes" -name '*.class')
 
 cp "$BUILD/unsigned.apk" "$BUILD/withdex.apk"
@@ -89,9 +89,9 @@ mkdir -p "$ROOT/../public" "$ROOT/../artifacts"
 "$BT/apksigner" sign \
   --ks "$KS" --ks-key-alias androiddebugkey \
   --ks-pass pass:android --key-pass pass:android \
-  --out "$ROOT/../public/overmark-1.5.0.apk" \
+  --out "$ROOT/../public/overmark-1.5.2.apk" \
   "$BUILD/aligned.apk"
-cp "$ROOT/../public/overmark-1.5.0.apk" "$ROOT/../artifacts/Overmark-1.5.0.apk" 2>/dev/null || true
-"$BT/apksigner" verify --verbose "$ROOT/../public/overmark-1.5.0.apk"
-"$BT/aapt" dump badging "$ROOT/../public/overmark-1.5.0.apk" | head -n 20
-ls -lh "$ROOT/../public/overmark-1.5.0.apk"
+cp "$ROOT/../public/overmark-1.5.2.apk" "$ROOT/../artifacts/Overmark-1.5.2.apk" 2>/dev/null || true
+"$BT/apksigner" verify --verbose "$ROOT/../public/overmark-1.5.2.apk"
+"$BT/aapt" dump badging "$ROOT/../public/overmark-1.5.2.apk" | head -n 20
+ls -lh "$ROOT/../public/overmark-1.5.2.apk"

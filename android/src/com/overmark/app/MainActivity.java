@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -92,7 +93,6 @@ public class MainActivity extends Activity implements LocationListener {
     private View mainPane;
     private View aboutPane;
     private View disclaimerPane;
-    private View privacyPane;
 
     private float limitKmh = 90f;
     private float speedKmh;
@@ -108,7 +108,6 @@ public class MainActivity extends Activity implements LocationListener {
     private Location previous;
     private Button aboutButton;
     private Button disclaimerButton;
-    private Button privacyButton;
     private Button langButton;
     private Button minusButton;
     private Button plusButton;
@@ -117,7 +116,6 @@ public class MainActivity extends Activity implements LocationListener {
     private Button backButton;
     private Button disclaimerBack;
     private Button disclaimerAbout;
-    private Button privacyBack;
     private TextView limitLabel;
     private TextView aboutVersion;
     private TextView contactKicker;
@@ -145,10 +143,47 @@ public class MainActivity extends Activity implements LocationListener {
     private EditText langSearch;
     private View langPane;
     private View rootView;
-    private String versionName = "1.5.0";
+    private String versionName = "1.5.2";
     private BroadcastReceiver screenReceiver;
     private boolean alertPosted;
     private long lastAlertAt;
+
+    private static final long RAMP_MS = 4000L;
+    private long rampStart;
+    private float rampTarget;
+    private boolean ramping;
+    private final Runnable rampStep = new Runnable() { public void run() {
+        if (!ramping || !tracking || !testMode) { ramping = false; return; }
+        float rate = rampTarget / (float) RAMP_MS;
+        float top = Math.min(250f, rampTarget + Math.max(10f, rampTarget * 0.1f));
+        float v = Math.min(top, rate * (SystemClock.uptimeMillis() - rampStart));
+        testKmh = v;
+        sample(testKmh, true);
+        if (v < top) handler.postDelayed(this, 50L); else ramping = false; } };
+
+    private void startRamp() {
+        rampTarget = limitKmh;
+        rampStart = SystemClock.uptimeMillis();
+        testKmh = 0f;
+        ramping = true;
+        handler.removeCallbacks(rampStep);
+        sample(testKmh, true);
+        handler.postDelayed(rampStep, 50L);
+    }
+
+    private void stopRamp() {
+        ramping = false;
+        handler.removeCallbacks(rampStep);
+    }
+
+    private PendingIntent openAppIntent() {
+        Intent open = new Intent(this, MainActivity.class)
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
+        return PendingIntent.getActivity(this, 0, open, flags);
+    }
 
     private final Runnable uiTick = new Runnable() {
         @Override
@@ -222,18 +257,15 @@ public class MainActivity extends Activity implements LocationListener {
         mainPane = buildMain();
         aboutPane = buildAbout();
         disclaimerPane = buildDisclaimer();
-        privacyPane = buildPrivacy();
         langPane = buildLanguage();
         settingsPane = buildSettings();
         settingsPane.setVisibility(View.GONE);
         aboutPane.setVisibility(View.GONE);
         disclaimerPane.setVisibility(View.GONE);
-        privacyPane.setVisibility(View.GONE);
         langPane.setVisibility(View.GONE);
         root.addView(mainPane);
         root.addView(aboutPane);
         root.addView(disclaimerPane);
-        root.addView(privacyPane);
         root.addView(langPane);
         root.addView(settingsPane);
         applyDirection();
@@ -292,10 +324,6 @@ public class MainActivity extends Activity implements LocationListener {
     public void onBackPressed() {
         if (langPane.getVisibility() == View.VISIBLE) {
             showLang(false);
-            return;
-        }
-        if (privacyPane.getVisibility() == View.VISIBLE) {
-            showPrivacy(false);
             return;
         }
         if (disclaimerPane.getVisibility() == View.VISIBLE) {
@@ -399,10 +427,16 @@ public class MainActivity extends Activity implements LocationListener {
         cancelAlert();
     }
 
+    /** One short vibration. Android 7 has no amplitude control, so only the length is used there. */
+    private void buzz(long ms, int amplitude) {
+        if (Build.VERSION.SDK_INT >= 26) vibrator.vibrate(VibrationEffect.createOneShot(ms, amplitude));
+        else vibrator.vibrate(ms);
+    }
+
     private void playBeep() {
         if (sound != null) sound.beep();
         if (vibrator != null && vibrator.hasVibrator()) {
-            vibrator.vibrate(VibrationEffect.createOneShot(18, 40));
+            buzz(18, 40);
         }
     }
 
@@ -414,7 +448,7 @@ public class MainActivity extends Activity implements LocationListener {
         handler.removeCallbacks(flashTick);
         handler.post(flashTick);
         if (vibrator != null && vibrator.hasVibrator()) {
-            vibrator.vibrate(VibrationEffect.createOneShot(160, VibrationEffect.DEFAULT_AMPLITUDE));
+            buzz(160, VibrationEffect.DEFAULT_AMPLITUDE);
         }
     }
 
@@ -439,7 +473,9 @@ public class MainActivity extends Activity implements LocationListener {
         resetPace();
         keepScreen();
         if (testMode) {
-            sample(testKmh, true);
+            startKeepAlive();
+            ensureNotifyPermission();
+            startRamp();
             return;
         }
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -549,7 +585,7 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void syncAlert() {
-        boolean show = tracking && !testMode && hasFix && Pace.overLimit(speedKmh, limitKmh) && screenIsOff();
+        boolean show = tracking && hasFix && Pace.overLimit(speedKmh, limitKmh) && screenIsOff();
         if (!show) {
             cancelAlert();
             return;
@@ -567,7 +603,11 @@ public class MainActivity extends Activity implements LocationListener {
         }
         int shown = Math.round(Pace.toDisplay(speedKmh, mph));
         String unit = mph ? "mph" : "km/h";
-        Notification note = new Notification.Builder(this, ALERT_CHANNEL)
+        Notification.Builder builder = Build.VERSION.SDK_INT >= 26
+                ? new Notification.Builder(this, ALERT_CHANNEL)
+                : new Notification.Builder(this);
+        if (Build.VERSION.SDK_INT < 26) builder.setPriority(Notification.PRIORITY_HIGH);
+        Notification note = builder
                 .setContentTitle("Overmark")
                 .setContentText(I18n.t("alertOver") + " · " + shown + " " + unit)
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
@@ -575,6 +615,8 @@ public class MainActivity extends Activity implements LocationListener {
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
+                .setContentIntent(openAppIntent())
+                .setAutoCancel(false)
                 .build();
         try {
             manager.notify(ALERT_ID, note);
@@ -653,10 +695,6 @@ public class MainActivity extends Activity implements LocationListener {
         showPane(show ? disclaimerPane : settingsPane);
     }
 
-    private void showPrivacy(boolean show) {
-        showPane(show ? privacyPane : settingsPane);
-    }
-
     private void showLang(boolean show) {
         showPane(show ? langPane : settingsPane);
     }
@@ -670,9 +708,6 @@ public class MainActivity extends Activity implements LocationListener {
         if (aboutPane != null) aboutPane.setVisibility(pane == aboutPane ? View.VISIBLE : View.GONE);
         if (disclaimerPane != null) {
             disclaimerPane.setVisibility(pane == disclaimerPane ? View.VISIBLE : View.GONE);
-        }
-        if (privacyPane != null) {
-            privacyPane.setVisibility(pane == privacyPane ? View.VISIBLE : View.GONE);
         }
         if (langPane != null) langPane.setVisibility(pane == langPane ? View.VISIBLE : View.GONE);
         if (settingsPane != null) settingsPane.setVisibility(pane == settingsPane ? View.VISIBLE : View.GONE);
@@ -695,7 +730,7 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void minimize() {
-        if (tracking && !testMode) startKeepAlive();
+        if (tracking) startKeepAlive();
         moveTaskToBack(true);
     }
 
@@ -789,8 +824,6 @@ public class MainActivity extends Activity implements LocationListener {
     private void relabel() {
         if (aboutButton != null) aboutButton.setText(I18n.t("about"));
         if (disclaimerButton != null) disclaimerButton.setText(I18n.t("disclaimerTitle"));
-        if (privacyButton != null) privacyButton.setText("Privacy");
-        if (privacyBack != null) privacyBack.setText(I18n.t("back"));
         if (langButton != null) langButton.setText(I18n.t("language"));
         if (gpsButton != null) gpsButton.setText("GPS");
         if (testButton != null) testButton.setText(I18n.t("test"));
@@ -1008,6 +1041,7 @@ public class MainActivity extends Activity implements LocationListener {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (!fromUser) return;
+                stopRamp();
                 testKmh = Pace.fromDisplay(progress, mph);
                 if (tracking && testMode) sample(testKmh, true);
                 else paint();
@@ -1141,14 +1175,7 @@ public class MainActivity extends Activity implements LocationListener {
                 showDisclaimer(true);
             }
         });
-        privacyButton = chip("Privacy", false);
-        privacyButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showPrivacy(true);
-            }
-        });
-        Button[] items = new Button[] {langButton, aboutButton, disclaimerButton, privacyButton};
+        Button[] items = new Button[] {langButton, aboutButton, disclaimerButton};
         for (int i = 0; i < items.length; i++) {
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT, dp(52));
@@ -1156,47 +1183,6 @@ public class MainActivity extends Activity implements LocationListener {
             items[i].setLayoutParams(lp);
             col.addView(items[i]);
         }
-
-        scroll.addView(col, new ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
-        return scroll;
-    }
-
-    private View buildPrivacy() {
-        ScrollView scroll = new ScrollView(this);
-        scroll.setBackgroundColor(COLOR_BG);
-        LinearLayout col = column();
-        col.setPadding(dp(20), dp(18), dp(20), dp(28));
-
-        privacyBack = chip(I18n.t("back"), false);
-        privacyBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showPrivacy(false);
-            }
-        });
-        col.addView(privacyBack);
-
-        TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
-        kicker.setLetterSpacing(0.18f);
-        kicker.setPadding(0, dp(28), 0, dp(8));
-        col.addView(kicker);
-        col.addView(bar());
-
-        TextView title = label("Privacy", 36, COLOR_FG, true);
-        title.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
-        col.addView(title);
-
-        String body = "Privacy";
-        try {
-            body = readAsset("privacy.txt").trim();
-        } catch (Exception ignored) {
-            body = I18n.t("privacy");
-        }
-        TextView text = label(body, 16, COLOR_FG, false);
-        text.setPadding(0, dp(16), 0, 0);
-        text.setLineSpacing(dp(4), 1f);
-        col.addView(text);
 
         scroll.addView(col, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));

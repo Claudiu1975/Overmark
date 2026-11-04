@@ -3,6 +3,7 @@ package com.overmark.app;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
@@ -29,7 +30,16 @@ public class KeepAliveService extends Service {
             channel.setDescription(I18n.t("privacyTitle"));
             manager.createNotificationChannel(channel);
         }
-        Notification note = new Notification.Builder(this, CHANNEL)
+        Notification.Builder builder = Build.VERSION.SDK_INT >= 26
+                ? new Notification.Builder(this, CHANNEL)
+                : new Notification.Builder(this);
+        if (Build.VERSION.SDK_INT < 26) builder.setPriority(Notification.PRIORITY_LOW);
+        Notification note = builder
+                .setContentIntent(PendingIntent.getActivity(this, 0,
+                        new Intent(this, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                                | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT),
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                                | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0)))
                 .setContentTitle("Overmark")
                 .setContentText(I18n.t("minimized"))
                 .setSmallIcon(android.R.drawable.ic_menu_mylocation)

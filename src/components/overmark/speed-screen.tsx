@@ -126,6 +126,26 @@ export function SpeedScreen() {
 
   useEffect(() => () => stopAlarm(), []);
 
+  const rampId = useRef(0);
+  function stopRamp() {
+    window.cancelAnimationFrame(rampId.current);
+    rampId.current = 0;
+  }
+  function startRamp() {
+    stopRamp();
+    const target = limitKmh;
+    const t0 = performance.now();
+    setTestKmh(0);
+    const step = (now: number) => {
+      const top = Math.min(250, target + Math.max(10, target * 0.1));
+      const v = Math.min(top, (target / 4000) * (now - t0));
+      setTestKmh(v);
+      rampId.current = v < top ? window.requestAnimationFrame(step) : 0;
+    };
+    rampId.current = window.requestAnimationFrame(step);
+  }
+  useEffect(() => () => stopRamp(), []);
+
   const phase = phaseOf({ running: running && !closed, hasFix, speedKmh, limitKmh, elapsedMs });
   const shown = Math.round(toDisplay(acceptSpeed(speedKmh) ? speedKmh : 0, unit));
   const elapsedLabel = `${(elapsedMs / 1000).toFixed(1)} s`;
@@ -162,6 +182,7 @@ export function SpeedScreen() {
   function toggleRun() {
     primeAudio();
     if (running) {
+      stopRamp();
       setRunning(false);
       if (mode === "gps") setGpsStatus("idle");
       return;
@@ -172,6 +193,7 @@ export function SpeedScreen() {
     setElapsedMs(0);
     if (mode === "gps") setGpsStatus("search");
     setRunning(true);
+    if (mode === "test") startRamp();
   }
 
   function onExit() {
@@ -350,6 +372,7 @@ export function SpeedScreen() {
             max={250}
             value={Math.round(toDisplay(testKmh, unit))}
             onChange={(e) => {
+              stopRamp();
               const kmh = fromDisplay(Number(e.target.value), unit);
               setTestKmh(acceptSpeed(kmh) ? kmh : 0);
             }}
@@ -416,12 +439,6 @@ export function SpeedScreen() {
               className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-surface text-sm text-fg"
             >
               {t("disclaimerTitle")}
-            </Link>
-            <Link
-              to="/privacy"
-              className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-surface text-sm text-fg"
-            >
-              Privacy
             </Link>
           </div>
         ) : null}

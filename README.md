@@ -8,6 +8,16 @@ If the screen is off and speed is over the limit, Overmark posts a notification.
 
 Disclaimer and About are separate pages.
 
+## What's new in 1.5.2
+
+- Test: touching arm raises the simulated speed from 0, reaches the set limit in about 4 seconds and keeps going a little above it, so the alarm starts by itself.
+- Test mode keeps running when the app is minimized, and the lock-screen alert appears when the speed is over the limit.
+- Touching the lock-screen alert opens the app.
+
+## What's new in 1.5.1
+
+- Works on Android 7.0 and newer.
+
 ## What's new in 1.5.0
 
 - Language, About and Disclaimer are a sub menu of Settings, and Settings is at the bottom of the screen.
@@ -42,12 +52,13 @@ cd android
 
 | Version | Package |
 | --- | --- |
-| overmark-android-7 | [overmark-android-7.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.1/overmark-android-7.apk) |
-| 1.5.0 | [overmark-1.5.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.0/overmark-1.5.0.apk) |
-| 1.4.0 | [overmark-1.4.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.4.0/overmark-1.4.0.apk) |
-| 1.3.0 | [overmark-1.3.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.3.0/overmark-1.3.0.apk) |
-| 1.2.0 | [overmark-1.2.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.2.0/overmark-1.2.0.apk) |
-| 1.1.0 | [overmark-1.1.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.1.0/overmark-1.1.0.apk) |
+| 1.5.2 | [public/overmark-1.5.2.apk](public/overmark-1.5.2.apk) |
+| 1.5.0 | [public/overmark-1.5.0.apk](public/overmark-1.5.0.apk) |
+| overmark-android-7 | [public/overmark-android-7.apk](public/overmark-android-7.apk) |
+| 1.4.0 | [public/overmark-1.4.0.apk](public/overmark-1.4.0.apk) |
+| 1.3.0 | [public/overmark-1.3.0.apk](public/overmark-1.3.0.apk) |
+| 1.2.0 | [public/overmark-1.2.0.apk](public/overmark-1.2.0.apk) |
+| 1.1.0 | [public/overmark-1.1.0.apk](public/overmark-1.1.0.apk) |
 
 A newer build does not remove older packages.
 
@@ -60,6 +71,6 @@ npm install
 npm run dev
 ```
 
-The Android 7 package in the archive is [overmark-android-7.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.1/overmark-android-7.apk). It installs on Android 7 and newer. The current package for newer phones is [overmark-1.5.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.0/overmark-1.5.0.apk). Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission.
+The newest signed package in the archive is [public/overmark-1.5.2.apk](public/overmark-1.5.2.apk). It needs Android 7 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission.
 
 To rebuild the APK, install Android SDK platform 34 and build-tools 34.0.0, then run `android/build.sh`. The debug keystore is created on the first build. The script writes the new package and leaves every older package in place.
