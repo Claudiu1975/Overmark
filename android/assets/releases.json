@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.5.5",
+    "file": "overmark-1.5.5.apk",
+    "notes": [
+      "The floating ring now runs for 60 seconds. The first 45 are amber, the last 15 are red. The alarm still starts at 45."
+    ]
+  },
+  {
     "version": "1.5.4",
     "file": "overmark-1.5.4.apk",
     "notes": [

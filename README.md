@@ -8,6 +8,10 @@ If the screen is off and speed is over the limit, Overmark posts a notification.
 
 Disclaimer and About are separate pages.
 
+## What's new in 1.5.5
+
+- The floating ring now runs for 60 seconds. The first 45 are amber, the last 15 are red. The alarm still starts at 45.
+
 ## What's new in 1.5.4
 
 - The floating speed is larger. Over the limit it turns red and heavier, and the orange ring fills red one second at a time.
@@ -63,6 +67,7 @@ cd android
 
 | Version | Package |
 | --- | --- |
+| 1.5.5 | [public/overmark-1.5.5.apk](public/overmark-1.5.5.apk) |
 | 1.5.4 | [public/overmark-1.5.4.apk](public/overmark-1.5.4.apk) |
 | 1.5.3 | [public/overmark-1.5.3.apk](public/overmark-1.5.3.apk) |
 | 1.5.2 | [public/overmark-1.5.2.apk](public/overmark-1.5.2.apk) |
@@ -84,6 +89,6 @@ npm install
 npm run dev
 ```
 
-The newest signed package in the archive is [public/overmark-1.5.4.apk](public/overmark-1.5.4.apk). It needs Android 7 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission. The floating gauge needs permission to display over other apps.
+The newest signed package in the archive is [public/overmark-1.5.5.apk](public/overmark-1.5.5.apk). It needs Android 7 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission. The floating gauge needs permission to display over other apps.
 
 To rebuild the APK, install Android SDK platform 34 and build-tools 34.0.0, then run `android/build.sh`. The debug keystore is created on the first build. The script writes the new package and leaves every older package in place.

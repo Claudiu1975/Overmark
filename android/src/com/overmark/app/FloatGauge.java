@@ -239,32 +239,39 @@ public final class FloatGauge {
         return Math.round(value * context.getResources().getDisplayMetrics().density);
     }
 
-    /** Orange ring. The red arc grows by one second until the whole ring is red. */
+    /** Sixty-second ring. The first 45 seconds are amber, the last 15 are red. */
     private static final class Ring extends View {
+        private static final float AMBER_SWEEP = 270f;
+        private static final float RED_SWEEP = 90f;
+
         private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint track = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final Paint hot = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint dimAmber = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint dimRed = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint amber = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint red = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final RectF oval = new RectF();
-        private int marks;
+        private int seconds;
         private boolean hotRing;
 
         Ring(Context context) {
             super(context);
             fill.setStyle(Paint.Style.FILL);
             fill.setColor(COLOR_BG);
-            track.setStyle(Paint.Style.STROKE);
-            track.setColor(COLOR_SIGNAL);
-            hot.setStyle(Paint.Style.STROKE);
-            hot.setColor(COLOR_ALARM);
+            stroke(dimAmber, 0xFF8A6414);
+            stroke(dimRed, 0xFF7A2A24);
+            stroke(amber, COLOR_SIGNAL);
+            stroke(red, COLOR_ALARM);
             setWillNotDraw(false);
         }
 
         void setMarks(int next, boolean overLimit, int thin, int thick) {
-            marks = next;
+            seconds = Math.max(0, Math.min(60, next));
             hotRing = overLimit;
             float width = overLimit ? thick : thin;
-            track.setStrokeWidth(width);
-            hot.setStrokeWidth(width);
+            dimAmber.setStrokeWidth(width);
+            dimRed.setStrokeWidth(width);
+            amber.setStrokeWidth(width);
+            red.setStrokeWidth(width);
             invalidate();
         }
 
@@ -272,14 +279,24 @@ public final class FloatGauge {
         protected void onDraw(Canvas canvas) {
             float cx = getWidth() / 2f;
             float cy = getHeight() / 2f;
-            float radius = Math.min(cx, cy) - track.getStrokeWidth() / 2f - 1f;
+            float radius = Math.min(cx, cy) - dimAmber.getStrokeWidth() / 2f - 1f;
             if (radius <= 0f) return;
             canvas.drawCircle(cx, cy, radius, fill);
-            canvas.drawCircle(cx, cy, radius, track);
-            if (!hotRing || marks <= 0) return;
             oval.set(cx - radius, cy - radius, cx + radius, cy + radius);
-            float sweep = 360f * Math.min(marks, Pace.MARK_COUNT) / (float) Pace.MARK_COUNT;
-            canvas.drawArc(oval, -90f, sweep, false, hot);
+            canvas.drawArc(oval, -90f, AMBER_SWEEP, false, dimAmber);
+            canvas.drawArc(oval, -90f + AMBER_SWEEP, RED_SWEEP, false, dimRed);
+            if (!hotRing || seconds <= 0) return;
+            float amberDone = 360f * Math.min(seconds, 45) / 60f;
+            canvas.drawArc(oval, -90f, amberDone, false, amber);
+            if (seconds > 45) {
+                canvas.drawArc(oval, -90f + AMBER_SWEEP, 360f * (seconds - 45) / 60f, false, red);
+            }
+        }
+
+        private static void stroke(Paint paint, int color) {
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeCap(Paint.Cap.BUTT);
+            paint.setColor(color);
         }
     }
 }

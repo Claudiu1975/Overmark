@@ -220,7 +220,7 @@ export function SpeedScreen() {
       speed={shown}
       unit={unitLabel(unit)}
       over={over}
-      marks={filled}
+      marks={over ? Math.min(60, Math.floor(elapsedMs / 1000)) : 0}
       alarm={phase === "alarm"}
       label={t("floatHint")}
       onOpen={openFromGauge}
@@ -585,7 +585,12 @@ function FloatBubble({
   const drag = useRef<{ px: number; py: number; x: number; y: number; moved: boolean } | null>(null);
   const wide = size === "large";
   const hot = over || alarm;
-  const sweep = `${(Math.min(marks, 45) / 45) * 289} 289`;
+  const ring = 2 * Math.PI * 46;
+  const amberLen = (45 / 60) * ring;
+  const redLen = (15 / 60) * ring;
+  const amberDone = (Math.min(marks, 45) / 60) * ring;
+  const redDone = (Math.max(0, marks - 45) / 60) * ring;
+  const width = hot ? 7 : 3;
 
   return (
     <button
@@ -614,18 +619,13 @@ function FloatBubble({
       }}
     >
       <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="50" cy="50" r="46" fill="none" stroke="#E8A317" strokeWidth={hot ? 7 : 3} />
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#8A6414" strokeWidth={width} strokeDasharray={`${amberLen} ${ring}`} transform="rotate(-90 50 50)" />
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#7A2A24" strokeWidth={width} strokeDasharray={`${redLen} ${ring}`} strokeDashoffset={-amberLen} transform="rotate(-90 50 50)" />
         {hot && marks > 0 ? (
-          <circle
-            cx="50"
-            cy="50"
-            r="46"
-            fill="none"
-            stroke="#E23B2F"
-            strokeWidth={7}
-            strokeDasharray={sweep}
-            transform="rotate(-90 50 50)"
-          />
+          <circle cx="50" cy="50" r="46" fill="none" stroke="#E8A317" strokeWidth={width} strokeDasharray={`${amberDone} ${ring}`} transform="rotate(-90 50 50)" />
+        ) : null}
+        {hot && marks > 45 ? (
+          <circle cx="50" cy="50" r="46" fill="none" stroke="#E23B2F" strokeWidth={width} strokeDasharray={`${redDone} ${ring}`} strokeDashoffset={-amberLen} transform="rotate(-90 50 50)" />
         ) : null}
       </svg>
       <span

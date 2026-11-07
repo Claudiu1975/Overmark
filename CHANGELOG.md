@@ -2,6 +2,12 @@
 
 Each version stays available. A newer build does not remove older packages.
 
+## 1.5.5
+
+- The floating ring now runs for 60 seconds. The first 45 are amber, the last 15 are red. The alarm still starts at 45.
+
+Package: [public/overmark-1.5.5.apk](public/overmark-1.5.5.apk)
+
 ## 1.5.4
 
 - The floating speed is larger. Over the limit it turns red and heavier, and the orange ring fills red one second at a time.

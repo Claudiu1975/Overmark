@@ -151,7 +151,7 @@ public class MainActivity extends Activity implements LocationListener {
     private EditText langSearch;
     private View langPane;
     private View rootView;
-    private String versionName = "1.5.4";
+    private String versionName = "1.5.5";
     private BroadcastReceiver screenReceiver;
     private boolean alertPosted;
     private long lastAlertAt;
@@ -787,7 +787,9 @@ public class MainActivity extends Activity implements LocationListener {
     private void syncGauge(int shown, String unit) {
         long elapsed = overSince >= 0L ? SystemClock.elapsedRealtime() - overSince : 0L;
         boolean over = tracking && (hasFix || testMode) && Pace.overLimit(speedKmh, limitKmh) && overSince >= 0L;
-        FloatGauge.update(shown, unit, over, alarming, flashOn, Pace.filledMarks(elapsed, over));
+        int seconds = 0;
+        if (over && elapsed >= 0L) seconds = (int) Math.min(60L, elapsed / 1000L);
+        FloatGauge.update(shown, unit, over, alarming, flashOn, seconds);
     }
 
     private void exitApp() {

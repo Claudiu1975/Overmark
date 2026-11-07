@@ -1,0 +1,1 @@
+The floating ring lasts 60 seconds. The first 45 are amber and the last 15 are red. The alarm still starts at 45.
