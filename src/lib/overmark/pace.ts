@@ -1,4 +1,4 @@
-export const APP_VERSION = "1.5.2";
+export const APP_VERSION = "1.5.3";
 export const ALARM_AFTER_MS = 45_000;
 export const MARK_COUNT = 45;
 export const MAX_PLAUSIBLE_KMH = 450;

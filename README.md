@@ -8,6 +8,12 @@ If the screen is off and speed is over the limit, Overmark posts a notification.
 
 Disclaimer and About are separate pages.
 
+## What's new in 1.5.3
+
+- A floating gauge shows the current speed on top of other apps.
+- Settings offers two sizes, small and large.
+- Float sits beside Minimize. Touching the gauge opens Overmark.
+
 ## What's new in 1.5.2
 
 - Test: touching arm raises the simulated speed from 0, reaches the set limit in about 4 seconds and keeps going a little above it, so the alarm starts by itself.
@@ -52,6 +58,7 @@ cd android
 
 | Version | Package |
 | --- | --- |
+| 1.5.3 | [public/overmark-1.5.3.apk](public/overmark-1.5.3.apk) |
 | 1.5.2 | [public/overmark-1.5.2.apk](public/overmark-1.5.2.apk) |
 | 1.5.0 | [public/overmark-1.5.0.apk](public/overmark-1.5.0.apk) |
 | overmark-android-7 | [public/overmark-android-7.apk](public/overmark-android-7.apk) |
@@ -71,6 +78,6 @@ npm install
 npm run dev
 ```
 
-The newest signed package in the archive is [public/overmark-1.5.2.apk](public/overmark-1.5.2.apk). It needs Android 7 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission.
+The newest signed package in the archive is [public/overmark-1.5.3.apk](public/overmark-1.5.3.apk). It needs Android 7 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission. The floating gauge needs permission to display over other apps.
 
 To rebuild the APK, install Android SDK platform 34 and build-tools 34.0.0, then run `android/build.sh`. The debug keystore is created on the first build. The script writes the new package and leaves every older package in place.

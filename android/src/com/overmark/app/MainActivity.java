@@ -41,6 +41,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -113,6 +114,7 @@ public class MainActivity extends Activity implements LocationListener {
     private Button plusButton;
     private Button exitButton;
     private Button minimizeButton;
+    private Button floatButton;
     private Button backButton;
     private Button disclaimerBack;
     private Button disclaimerAbout;
@@ -125,6 +127,12 @@ public class MainActivity extends Activity implements LocationListener {
     private Button settingsButton;
     private Button settingsBack;
     private TextView settingsTitle;
+    private TextView floatSizeLabel;
+    private TextView floatHintView;
+    private Button floatSmallButton;
+    private Button floatLargeButton;
+    private String floatSize = FloatGauge.SMALL;
+    private boolean floatAfterPermission;
     private TextView aboutDisclaimerTitle;
     private TextView aboutDisclaimer;
     private TextView aboutPrivacyTitle;
@@ -143,7 +151,7 @@ public class MainActivity extends Activity implements LocationListener {
     private EditText langSearch;
     private View langPane;
     private View rootView;
-    private String versionName = "1.5.2";
+    private String versionName = "1.5.3";
     private BroadcastReceiver screenReceiver;
     private boolean alertPosted;
     private long lastAlertAt;
@@ -216,6 +224,8 @@ public class MainActivity extends Activity implements LocationListener {
             limitKmh = prefs.getFloat("limit_kmh", 90f);
         }
         mph = prefs.getBoolean("mph", false);
+        floatSize = FloatGauge.LARGE.equals(prefs.getString("float_size", FloatGauge.SMALL))
+                ? FloatGauge.LARGE : FloatGauge.SMALL;
         String savedLang = prefs.getString("lang", null);
         if (savedLang != null) I18n.lang = savedLang;
         else I18n.lang = I18n.matchDevice(Locale.getDefault());
@@ -285,6 +295,19 @@ public class MainActivity extends Activity implements LocationListener {
     protected void onResume() {
         super.onResume();
         if (tracking && !testMode && permissionGranted()) beginGps();
+        if (floatAfterPermission) {
+            floatAfterPermission = false;
+            if (FloatGauge.canDraw(this)) {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        showFloatAndLeave();
+                    }
+                });
+                return;
+            }
+        }
+        FloatGauge.hide();
     }
 
     @Override
@@ -314,6 +337,7 @@ public class MainActivity extends Activity implements LocationListener {
         stopGps();
         if (!isChangingConfigurations()) {
             stopKeepAlive();
+            FloatGauge.hide();
         }
         if (sound != null) sound.release();
         if (vibrator != null) vibrator.cancel();
@@ -734,6 +758,32 @@ public class MainActivity extends Activity implements LocationListener {
         moveTaskToBack(true);
     }
 
+    private void onFloat() {
+        if (!FloatGauge.canDraw(this)) {
+            floatAfterPermission = true;
+            Toast.makeText(this, I18n.t("floatNeed"), Toast.LENGTH_LONG).show();
+            startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName())));
+            return;
+        }
+        showFloatAndLeave();
+    }
+
+    private void showFloatAndLeave() {
+        if (tracking) startKeepAlive();
+        int shown = Math.round(Pace.toDisplay(speedKmh, mph));
+        FloatGauge.update(shown, mph ? "mph" : "km/h", alarming, flashOn);
+        FloatGauge.show(getApplicationContext(), floatSize);
+        moveTaskToBack(true);
+    }
+
+    private void setFloatSize(String size) {
+        floatSize = FloatGauge.LARGE.equals(size) ? FloatGauge.LARGE : FloatGauge.SMALL;
+        prefs.edit().putString("float_size", floatSize).apply();
+        if (floatSmallButton != null) styleChoice(floatSmallButton, !FloatGauge.LARGE.equals(floatSize));
+        if (floatLargeButton != null) styleChoice(floatLargeButton, FloatGauge.LARGE.equals(floatSize));
+    }
+
     private void exitApp() {
         tracking = false;
         gpsWantedGone();
@@ -741,6 +791,7 @@ public class MainActivity extends Activity implements LocationListener {
         resetPace();
         clearKeepScreen();
         stopKeepAlive();
+        FloatGauge.hide();
         wipeVolatile();
         finishAndRemoveTask();
     }
@@ -753,10 +804,12 @@ public class MainActivity extends Activity implements LocationListener {
         String lang = prefs.getString("lang", null);
         float limit = prefs.getFloat("limit_kmh", 90f);
         boolean useMph = prefs.getBoolean("mph", false);
+        String gauge = prefs.getString("float_size", FloatGauge.SMALL);
         SharedPreferences.Editor editor = prefs.edit();
         editor.clear();
         editor.putFloat("limit_kmh", limit);
         editor.putBoolean("mph", useMph);
+        editor.putString("float_size", gauge);
         editor.putInt("limit_rev", 2);
         if (lang != null) editor.putString("lang", lang);
         editor.apply();
@@ -804,6 +857,7 @@ public class MainActivity extends Activity implements LocationListener {
         else speedView.setTextColor(COLOR_SIGNAL);
         unitView.setText(unit);
         elapsedView.setText(String.format(Locale.US, "%.1f s", elapsed / 1000.0));
+        FloatGauge.update(shown, unit, alarming, flashOn);
         rail.setState(Pace.filledMarks(elapsed, over), alarming);
         limitView.setText(String.format(Locale.US, "%.1f", Pace.toDisplay(limitKmh, mph)));
         styleChoice(gpsButton, !testMode);
@@ -829,6 +883,17 @@ public class MainActivity extends Activity implements LocationListener {
         if (testButton != null) testButton.setText(I18n.t("test"));
         if (exitButton != null) exitButton.setText(I18n.t("exit"));
         if (minimizeButton != null) minimizeButton.setText(I18n.t("minimize"));
+        if (floatButton != null) floatButton.setText(I18n.t("floatGauge"));
+        if (floatSizeLabel != null) floatSizeLabel.setText(I18n.t("floatSize"));
+        if (floatHintView != null) floatHintView.setText(I18n.t("floatHint"));
+        if (floatSmallButton != null) {
+            floatSmallButton.setText(I18n.t("floatSmall"));
+            styleChoice(floatSmallButton, !FloatGauge.LARGE.equals(floatSize));
+        }
+        if (floatLargeButton != null) {
+            floatLargeButton.setText(I18n.t("floatLarge"));
+            styleChoice(floatLargeButton, FloatGauge.LARGE.equals(floatSize));
+        }
         if (limitLabel != null) limitLabel.setText(I18n.t("limit"));
         if (minusButton != null) minusButton.setContentDescription(I18n.t("stepDown"));
         if (plusButton != null) plusButton.setContentDescription(I18n.t("stepUp"));
@@ -1081,16 +1146,32 @@ public class MainActivity extends Activity implements LocationListener {
         LinearLayout power = row();
         power.setPadding(0, dp(8), 0, 0);
         minimizeButton = chip(I18n.t("minimize"), false);
+        floatButton = chip(I18n.t("floatGauge"), false);
         exitButton = chip(I18n.t("exit"), false);
-        LinearLayout.LayoutParams halfM = new LinearLayout.LayoutParams(0, dp(48), 1f);
-        minimizeButton.setLayoutParams(halfM);
-        LinearLayout.LayoutParams halfE = new LinearLayout.LayoutParams(0, dp(48), 1f);
-        halfE.leftMargin = dp(8);
-        exitButton.setLayoutParams(halfE);
+        LinearLayout.LayoutParams third = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        minimizeButton.setLayoutParams(third);
+        LinearLayout.LayoutParams thirdF = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        thirdF.leftMargin = dp(8);
+        floatButton.setLayoutParams(thirdF);
+        LinearLayout.LayoutParams thirdE = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        thirdE.leftMargin = dp(8);
+        exitButton.setLayoutParams(thirdE);
+        minimizeButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        floatButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        exitButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        minimizeButton.setPadding(dp(4), 0, dp(4), 0);
+        floatButton.setPadding(dp(4), 0, dp(4), 0);
+        exitButton.setPadding(dp(4), 0, dp(4), 0);
         minimizeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 minimize();
+            }
+        });
+        floatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onFloat();
             }
         });
         exitButton.setOnClickListener(new View.OnClickListener() {
@@ -1100,6 +1181,7 @@ public class MainActivity extends Activity implements LocationListener {
             }
         });
         power.addView(minimizeButton);
+        power.addView(floatButton);
         power.addView(exitButton);
         col.addView(power);
 
@@ -1153,6 +1235,40 @@ public class MainActivity extends Activity implements LocationListener {
         settingsTitle.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
         settingsTitle.setPadding(0, 0, 0, dp(10));
         col.addView(settingsTitle);
+
+        floatSizeLabel = label(I18n.t("floatSize"), 12, COLOR_MUTED, true);
+        floatSizeLabel.setLetterSpacing(0.12f);
+        floatSizeLabel.setPadding(0, dp(8), 0, dp(8));
+        col.addView(floatSizeLabel);
+
+        LinearLayout sizes = row();
+        floatSmallButton = chip(I18n.t("floatSmall"), !FloatGauge.LARGE.equals(floatSize));
+        floatLargeButton = chip(I18n.t("floatLarge"), FloatGauge.LARGE.equals(floatSize));
+        LinearLayout.LayoutParams sizeA = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        floatSmallButton.setLayoutParams(sizeA);
+        LinearLayout.LayoutParams sizeB = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        sizeB.leftMargin = dp(8);
+        floatLargeButton.setLayoutParams(sizeB);
+        floatSmallButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setFloatSize(FloatGauge.SMALL);
+            }
+        });
+        floatLargeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setFloatSize(FloatGauge.LARGE);
+            }
+        });
+        sizes.addView(floatSmallButton);
+        sizes.addView(floatLargeButton);
+        col.addView(sizes);
+
+        floatHintView = label(I18n.t("floatHint"), 14, COLOR_MUTED, false);
+        floatHintView.setPadding(0, dp(8), 0, dp(6));
+        floatHintView.setLineSpacing(dp(3), 1f);
+        col.addView(floatHintView);
 
         langButton = chip(I18n.t("language"), false);
         langButton.setOnClickListener(new View.OnClickListener() {

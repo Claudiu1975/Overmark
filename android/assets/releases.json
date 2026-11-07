@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.5.3",
+    "file": "overmark-1.5.3.apk",
+    "notes": [
+      "A floating gauge shows the current speed on top of other apps.",
+      "Settings offers two sizes, small and large. The size you pick is kept.",
+      "Float sits beside Minimize. Touching the gauge opens Overmark."
+    ]
+  },
+  {
     "version": "1.5.2",
     "file": "overmark-1.5.2.apk",
     "notes": [

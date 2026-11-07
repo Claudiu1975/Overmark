@@ -2,6 +2,14 @@
 
 Each version stays available. A newer build does not remove older packages.
 
+## 1.5.3
+
+- A floating gauge shows the current speed on top of other apps.
+- Settings offers two sizes, small and large. The size you pick is kept.
+- Float sits beside Minimize. Touching the gauge opens Overmark.
+
+Package: [public/overmark-1.5.3.apk](public/overmark-1.5.3.apk)
+
 ## 1.5.2
 
 - Test: touching arm raises the simulated speed from 0, reaches the set limit in about 4 seconds and keeps going a little above it, so the alarm starts by itself.

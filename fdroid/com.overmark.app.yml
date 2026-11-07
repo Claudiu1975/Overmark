@@ -40,7 +40,14 @@ Builds:
     gradle:
       - yes
 
+  - versionName: '1.5.3'
+    versionCode: 11
+    commit: v1.5.3
+    subdir: android
+    gradle:
+      - yes
+
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: '1.5.2'
-CurrentVersionCode: 8
+CurrentVersion: '1.5.3'
+CurrentVersionCode: 11
