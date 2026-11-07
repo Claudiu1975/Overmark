@@ -1,0 +1,1 @@
+The floating speed is larger. Over the limit it turns red, the ring thickens and fills red each second, and at 45 seconds the speed flashes.

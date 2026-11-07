@@ -219,6 +219,8 @@ export function SpeedScreen() {
       size={floatSize}
       speed={shown}
       unit={unitLabel(unit)}
+      over={over}
+      marks={filled}
       alarm={phase === "alarm"}
       label={t("floatHint")}
       onOpen={openFromGauge}
@@ -564,6 +566,8 @@ function FloatBubble({
   size,
   speed,
   unit,
+  over,
+  marks,
   alarm,
   label,
   onOpen,
@@ -571,6 +575,8 @@ function FloatBubble({
   size: FloatSize;
   speed: number;
   unit: string;
+  over: boolean;
+  marks: number;
   alarm: boolean;
   label: string;
   onOpen: () => void;
@@ -578,15 +584,16 @@ function FloatBubble({
   const [pos, setPos] = useState({ x: 16, y: 72 });
   const drag = useRef<{ px: number; py: number; x: number; y: number; moved: boolean } | null>(null);
   const wide = size === "large";
+  const hot = over || alarm;
+  const sweep = `${(Math.min(marks, 45) / 45) * 289} 289`;
 
   return (
     <button
       type="button"
       aria-label={label}
       className={
-        "fixed z-40 flex flex-col items-center justify-center rounded-full border-2 bg-bg/95 shadow-lg " +
-        (alarm ? "border-alarm" : "border-signal") +
-        (wide ? " size-36" : " size-24")
+        "fixed z-40 flex flex-col items-center justify-center rounded-full bg-bg/95 shadow-lg " +
+        (wide ? " size-40" : " size-28")
       }
       style={{ right: pos.x, top: pos.y }}
       onPointerDown={(event) => {
@@ -606,7 +613,27 @@ function FloatBubble({
         drag.current = null;
       }}
     >
-      <span className={(alarm ? "speed-alarm " : "text-signal ") + (wide ? "font-display text-5xl leading-none tabular" : "font-display text-3xl leading-none tabular")}>
+      <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#E8A317" strokeWidth={hot ? 7 : 3} />
+        {hot && marks > 0 ? (
+          <circle
+            cx="50"
+            cy="50"
+            r="46"
+            fill="none"
+            stroke="#E23B2F"
+            strokeWidth={7}
+            strokeDasharray={sweep}
+            transform="rotate(-90 50 50)"
+          />
+        ) : null}
+      </svg>
+      <span
+        className={
+          (alarm ? "speed-alarm font-black " : hot ? "font-black text-alarm " : "font-bold text-signal ") +
+          (wide ? "font-display text-6xl leading-none tabular" : "font-display text-4xl leading-none tabular")
+        }
+      >
         {speed}
       </span>
       <span className="text-[10px] tracking-widest text-muted">{unit}</span>

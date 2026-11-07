@@ -2,9 +2,11 @@ package com.overmark.app;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.PixelFormat;
+import android.graphics.RectF;
 import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
 import android.provider.Settings;
 import android.util.TypedValue;
@@ -12,6 +14,7 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -31,13 +34,16 @@ public final class FloatGauge {
     private static WindowManager.LayoutParams params;
     private static TextView speedView;
     private static TextView unitView;
-    private static GradientDrawable plate;
+    private static Ring ring;
     private static String size = SMALL;
     private static int shown;
     private static String unit = "km/h";
+    private static boolean over;
     private static boolean alarming;
     private static boolean flashOn = true;
-    private static int stroke;
+    private static int marks;
+    private static int thin;
+    private static int thick;
 
     private FloatGauge() {}
 
@@ -50,11 +56,13 @@ public final class FloatGauge {
         return root != null;
     }
 
-    public static void update(int speed, String unitLabel, boolean alarm, boolean flash) {
+    public static void update(int speed, String unitLabel, boolean overLimit, boolean alarm, boolean flash, int filled) {
         shown = speed;
         if (unitLabel != null) unit = unitLabel;
+        over = overLimit;
         alarming = alarm;
         flashOn = flash;
+        marks = filled;
         paint();
     }
 
@@ -79,30 +87,33 @@ public final class FloatGauge {
         params = null;
         speedView = null;
         unitView = null;
-        plate = null;
+        ring = null;
     }
 
     private static void attach(Context app) {
         windowManager = (WindowManager) app.getSystemService(Context.WINDOW_SERVICE);
         if (windowManager == null) return;
-        stroke = dp(app, 2);
+        thin = dp(app, 3);
+        thick = dp(app, 7);
         int diameter = diameter(app);
 
-        plate = new GradientDrawable();
-        plate.setShape(GradientDrawable.OVAL);
-        plate.setColor(COLOR_BG);
-        plate.setStroke(stroke, COLOR_SIGNAL);
-
+        ring = new Ring(app);
         LinearLayout column = new LinearLayout(app);
         column.setOrientation(LinearLayout.VERTICAL);
         column.setGravity(Gravity.CENTER);
-        speedView = text(app, LARGE.equals(size) ? 48 : 30, COLOR_SIGNAL, true);
-        unitView = text(app, LARGE.equals(size) ? 14 : 11, COLOR_MUTED, false);
+        speedView = text(app, speedSp(false), COLOR_SIGNAL);
+        unitView = text(app, LARGE.equals(size) ? 13 : 10, COLOR_MUTED);
         column.addView(speedView);
         column.addView(unitView);
 
-        root = column;
-        root.setBackground(plate);
+        FrameLayout frame = new FrameLayout(app);
+        frame.addView(ring, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        FrameLayout.LayoutParams center = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+        center.gravity = Gravity.CENTER;
+        frame.addView(column, center);
+        root = frame;
         root.setContentDescription("Overmark");
 
         int type = Build.VERSION.SDK_INT >= 26
@@ -167,11 +178,10 @@ public final class FloatGauge {
 
     private static void resize(Context app) {
         if (params == null || windowManager == null || root == null) return;
-        int diameter = diameter(app);
-        params.width = diameter;
-        params.height = diameter;
-        speedView.setTextSize(TypedValue.COMPLEX_UNIT_SP, LARGE.equals(size) ? 48 : 30);
-        unitView.setTextSize(TypedValue.COMPLEX_UNIT_SP, LARGE.equals(size) ? 14 : 11);
+        thin = dp(app, 3);
+        thick = dp(app, 7);
+        params.width = diameter(app);
+        params.height = params.width;
         try {
             windowManager.updateViewLayout(root, params);
         } catch (Exception ignored) {
@@ -180,12 +190,22 @@ public final class FloatGauge {
     }
 
     private static void paint() {
-        if (speedView == null || unitView == null || plate == null) return;
+        if (speedView == null || unitView == null) return;
         speedView.setText(String.valueOf(shown));
         unitView.setText(unit);
-        int color = alarming ? (flashOn ? COLOR_ALARM : COLOR_FG) : COLOR_SIGNAL;
-        speedView.setTextColor(color);
-        plate.setStroke(stroke, alarming ? COLOR_ALARM : COLOR_SIGNAL);
+        boolean heavy = over || alarming;
+        speedView.setTextSize(TypedValue.COMPLEX_UNIT_SP, speedSp(heavy));
+        speedView.getPaint().setFakeBoldText(heavy);
+        speedView.invalidate();
+        if (alarming) speedView.setTextColor(flashOn ? COLOR_ALARM : COLOR_FG);
+        else if (over) speedView.setTextColor(COLOR_ALARM);
+        else speedView.setTextColor(COLOR_SIGNAL);
+        if (ring != null) ring.setMarks(marks, over || alarming, thin, thick);
+    }
+
+    private static int speedSp(boolean heavy) {
+        int base = LARGE.equals(size) ? 56 : 38;
+        return heavy ? base + 4 : base;
     }
 
     private static void openApp(Context context) {
@@ -202,20 +222,64 @@ public final class FloatGauge {
     }
 
     private static int diameter(Context context) {
-        return dp(context, LARGE.equals(size) ? 156 : 96);
+        return dp(context, LARGE.equals(size) ? 168 : 108);
     }
 
-    private static TextView text(Context context, int sp, int color, boolean strong) {
+    private static TextView text(Context context, int sp, int color) {
         TextView view = new TextView(context);
         view.setTextColor(color);
         view.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
         view.setGravity(Gravity.CENTER);
         view.setIncludeFontPadding(false);
-        view.setTypeface(Typeface.create("sans-serif-condensed", strong ? Typeface.BOLD : Typeface.NORMAL));
+        view.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
         return view;
     }
 
     private static int dp(Context context, int value) {
         return Math.round(value * context.getResources().getDisplayMetrics().density);
+    }
+
+    /** Orange ring. The red arc grows by one second until the whole ring is red. */
+    private static final class Ring extends View {
+        private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint track = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint hot = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final RectF oval = new RectF();
+        private int marks;
+        private boolean hotRing;
+
+        Ring(Context context) {
+            super(context);
+            fill.setStyle(Paint.Style.FILL);
+            fill.setColor(COLOR_BG);
+            track.setStyle(Paint.Style.STROKE);
+            track.setColor(COLOR_SIGNAL);
+            hot.setStyle(Paint.Style.STROKE);
+            hot.setColor(COLOR_ALARM);
+            setWillNotDraw(false);
+        }
+
+        void setMarks(int next, boolean overLimit, int thin, int thick) {
+            marks = next;
+            hotRing = overLimit;
+            float width = overLimit ? thick : thin;
+            track.setStrokeWidth(width);
+            hot.setStrokeWidth(width);
+            invalidate();
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            float cx = getWidth() / 2f;
+            float cy = getHeight() / 2f;
+            float radius = Math.min(cx, cy) - track.getStrokeWidth() / 2f - 1f;
+            if (radius <= 0f) return;
+            canvas.drawCircle(cx, cy, radius, fill);
+            canvas.drawCircle(cx, cy, radius, track);
+            if (!hotRing || marks <= 0) return;
+            oval.set(cx - radius, cy - radius, cx + radius, cy + radius);
+            float sweep = 360f * Math.min(marks, Pace.MARK_COUNT) / (float) Pace.MARK_COUNT;
+            canvas.drawArc(oval, -90f, sweep, false, hot);
+        }
     }
 }

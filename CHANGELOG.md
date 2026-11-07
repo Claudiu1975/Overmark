@@ -2,6 +2,13 @@
 
 Each version stays available. A newer build does not remove older packages.
 
+## 1.5.4
+
+- The floating speed is larger. Over the limit it turns red and heavier, and the orange ring fills red one second at a time.
+- At 45 seconds the speed on the gauge starts flashing.
+
+Package: [public/overmark-1.5.4.apk](public/overmark-1.5.4.apk)
+
 ## 1.5.3
 
 - A floating gauge shows the current speed on top of other apps.

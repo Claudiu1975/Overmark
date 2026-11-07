@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.5.4",
+    "file": "overmark-1.5.4.apk",
+    "notes": [
+      "The floating speed is larger. Over the limit it turns red and heavier, and the orange ring fills red one second at a time.",
+      "At 45 seconds the speed on the gauge starts flashing."
+    ]
+  },
+  {
     "version": "1.5.3",
     "file": "overmark-1.5.3.apk",
     "notes": [

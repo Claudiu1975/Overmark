@@ -151,7 +151,7 @@ public class MainActivity extends Activity implements LocationListener {
     private EditText langSearch;
     private View langPane;
     private View rootView;
-    private String versionName = "1.5.3";
+    private String versionName = "1.5.4";
     private BroadcastReceiver screenReceiver;
     private boolean alertPosted;
     private long lastAlertAt;
@@ -772,7 +772,7 @@ public class MainActivity extends Activity implements LocationListener {
     private void showFloatAndLeave() {
         if (tracking) startKeepAlive();
         int shown = Math.round(Pace.toDisplay(speedKmh, mph));
-        FloatGauge.update(shown, mph ? "mph" : "km/h", alarming, flashOn);
+        syncGauge(shown, mph ? "mph" : "km/h");
         FloatGauge.show(getApplicationContext(), floatSize);
         moveTaskToBack(true);
     }
@@ -782,6 +782,12 @@ public class MainActivity extends Activity implements LocationListener {
         prefs.edit().putString("float_size", floatSize).apply();
         if (floatSmallButton != null) styleChoice(floatSmallButton, !FloatGauge.LARGE.equals(floatSize));
         if (floatLargeButton != null) styleChoice(floatLargeButton, FloatGauge.LARGE.equals(floatSize));
+    }
+
+    private void syncGauge(int shown, String unit) {
+        long elapsed = overSince >= 0L ? SystemClock.elapsedRealtime() - overSince : 0L;
+        boolean over = tracking && (hasFix || testMode) && Pace.overLimit(speedKmh, limitKmh) && overSince >= 0L;
+        FloatGauge.update(shown, unit, over, alarming, flashOn, Pace.filledMarks(elapsed, over));
     }
 
     private void exitApp() {
@@ -857,7 +863,7 @@ public class MainActivity extends Activity implements LocationListener {
         else speedView.setTextColor(COLOR_SIGNAL);
         unitView.setText(unit);
         elapsedView.setText(String.format(Locale.US, "%.1f s", elapsed / 1000.0));
-        FloatGauge.update(shown, unit, alarming, flashOn);
+        syncGauge(shown, unit);
         rail.setState(Pace.filledMarks(elapsed, over), alarming);
         limitView.setText(String.format(Locale.US, "%.1f", Pace.toDisplay(limitKmh, mph)));
         styleChoice(gpsButton, !testMode);
