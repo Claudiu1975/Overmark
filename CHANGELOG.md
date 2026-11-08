@@ -6,7 +6,7 @@ Each version stays available. A newer build does not remove older packages.
 
 - Same screen flow as Basic. Language is on the main screen. About holds the description, the navigation photo, the gauge size, and the legal text. Settings is gone, so language and About return to the main screen.
 
-Package: [public/overmark-pro-1.6.2.apk](public/overmark-pro-1.6.2.apk)
+Pro is not published as a compiled package. Compile it from this source, or search the Google Play Store for Overmark Pro.
 
 ## 1.6.2 Basic
 
@@ -28,7 +28,7 @@ Package: [public/overmark-basic-1.6.1.apk](public/overmark-basic-1.6.1.apk)
 - Basic shows screenshots of the Pro gauge and a description. The Google Play purchase link will be added later.
 - Pro is the package prepared for Google Play as the paid app. It targets Android 16.
 
-Package: [public/overmark-pro-1.6.0.apk](public/overmark-pro-1.6.0.apk) and [public/overmark-basic-1.6.0.apk](public/overmark-basic-1.6.0.apk)
+Package: [public/overmark-basic-1.6.0.apk](public/overmark-basic-1.6.0.apk). The Pro build from this version is not published.
 
 ## 1.5.5
 

@@ -1,9 +1,10 @@
 [
   {
     "version": "1.6.2 Pro",
-    "file": "overmark-pro-1.6.2.apk",
+    "file": "",
     "notes": [
-      "Same flow as Basic. Language is on the main screen. About holds the description, the navigation photo, the gauge size, and the legal text."
+      "Same flow as Basic. Language is on the main screen. About holds the description, the navigation photo, the gauge size, and the legal text.",
+      "Compiled Pro is not published. Compile it yourself, or search the Google Play Store for Overmark Pro."
     ]
   },
   {
@@ -24,11 +25,12 @@
   },
   {
     "version": "1.6.0",
-    "file": "overmark-pro-1.6.0.apk",
+    "file": "",
     "notes": [
       "Overmark Pro keeps the floating gauge and is the paid Play app.",
       "Overmark Basic is the free app. It has no gauge, and it shows screenshots and a description of Pro.",
-      "The Google Play purchase link will be added to Basic later."
+      "The Google Play purchase link will be added to Basic later.",
+      "Compiled Pro is not published. Compile it yourself, or search the Google Play Store for Overmark Pro."
     ]
   },
   {
