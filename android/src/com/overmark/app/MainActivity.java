@@ -1694,24 +1694,7 @@ public class MainActivity extends Activity implements LocationListener {
 
     /** Picture and Pequeño / Grande, added onto the 1.5.0 settings page. */
     private void addGaugeSettings(LinearLayout col) {
-        try {
-            InputStream in = getAssets().open("nav-gauge.jpg");
-            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(in);
-            in.close();
-            if (bitmap != null) {
-                ImageView view = new ImageView(this);
-                view.setImageBitmap(bitmap);
-                view.setAdjustViewBounds(true);
-                view.setContentDescription(I18n.t("proPhoto"));
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                lp.topMargin = dp(8);
-                view.setLayoutParams(lp);
-                col.addView(view);
-            }
-        } catch (Exception ignored) {
-            /* picture missing */
-        }
+        addGaugePhoto(col);
 
         floatSizeLabel = label(I18n.t("floatSize"), 12, COLOR_MUTED, true);
         floatSizeLabel.setLetterSpacing(0.12f);
@@ -1748,8 +1731,10 @@ public class MainActivity extends Activity implements LocationListener {
         col.addView(floatHintView);
     }
 
-    /** Basic has no gauge. Point to Overmark Pro instead. */
+    /** Basic shows the gauge picture as a showcase, then the note about Pro. */
     private void addProPitch(LinearLayout col) {
+        addGaugePhoto(col);
+
         proTitleView = label(I18n.t("proTitle"), 22, COLOR_FG, true);
         proTitleView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
         proTitleView.setPadding(0, dp(8), 0, dp(8));
@@ -1763,6 +1748,27 @@ public class MainActivity extends Activity implements LocationListener {
         proLinkView.setPadding(0, dp(8), 0, dp(6));
         proLinkView.setLineSpacing(dp(3), 1f);
         col.addView(proLinkView);
+    }
+
+    private void addGaugePhoto(LinearLayout col) {
+        try {
+            InputStream in = getAssets().open("nav-gauge.jpg");
+            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(in);
+            in.close();
+            if (bitmap != null) {
+                ImageView view = new ImageView(this);
+                view.setImageBitmap(bitmap);
+                view.setAdjustViewBounds(true);
+                view.setContentDescription(I18n.t("proPhoto"));
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.topMargin = dp(8);
+                view.setLayoutParams(lp);
+                col.addView(view);
+            }
+        } catch (Exception ignored) {
+            /* picture missing */
+        }
     }
 
     private int dp(int value) {

@@ -28,8 +28,8 @@ android {
         basic {
             dimension "edition"
             applicationId "com.overmark.basic"
-            versionCode 19
-            versionName "1.7.0"
+            versionCode 20
+            versionName "1.7.1"
             buildConfigField "boolean", "PRO", "false"
         }
         pro {
