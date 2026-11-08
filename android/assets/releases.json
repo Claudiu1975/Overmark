@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.6.2",
+    "file": "overmark-basic-1.6.2.apk",
+    "notes": [
+      "Basic only. The empty Settings page is gone. Language and About return to the main screen."
+    ]
+  },
+  {
     "version": "1.6.1",
     "file": "overmark-basic-1.6.1.apk",
     "notes": [

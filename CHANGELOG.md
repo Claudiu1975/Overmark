@@ -2,6 +2,12 @@
 
 Each version stays available. A newer build does not remove older packages.
 
+## 1.6.2 Basic
+
+- Basic only. The empty Settings page is gone. Choosing a language, or leaving About, returns to the main screen.
+
+Package: [public/overmark-basic-1.6.2.apk](public/overmark-basic-1.6.2.apk)
+
 ## 1.6.1 Basic
 
 - Basic only. Pro stays at 1.6.0.

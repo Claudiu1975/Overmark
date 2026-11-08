@@ -719,15 +719,20 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void showAbout(boolean show) {
-        showPane(show ? aboutPane : settingsPane);
+        showPane(show ? aboutPane : underPage());
     }
 
     private void showDisclaimer(boolean show) {
-        showPane(show ? disclaimerPane : settingsPane);
+        showPane(show ? disclaimerPane : underPage());
     }
 
     private void showLang(boolean show) {
-        showPane(show ? langPane : settingsPane);
+        showPane(show ? langPane : underPage());
+    }
+
+    /** Pro returns to Settings. Basic has no Settings page, so it returns to the main screen. */
+    private View underPage() {
+        return BuildConfig.PRO ? settingsPane : null;
     }
 
     private void showSettings(boolean show) {

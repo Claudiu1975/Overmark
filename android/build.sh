@@ -10,8 +10,8 @@ if [ "$EDITION" = "basic" ]; then
   PRO_VALUE=false
   APP_ID="com.overmark.basic"
   LABEL="Overmark"
-  VERSION_CODE=15
-  VERSION_NAME=1.6.1
+  VERSION_CODE=16
+  VERSION_NAME=1.6.2
 else
   EDITION="pro"
   PRO_VALUE=true
@@ -90,8 +90,8 @@ EOF
 MANIFEST="$ROOT/AndroidManifest.xml"
 if [ "$EDITION" = "basic" ]; then
   sed -e '/SYSTEM_ALERT_WINDOW/d' \
-      -e 's/versionCode="14"/versionCode="15"/' \
-      -e 's/versionName="1.6.0"/versionName="1.6.1"/' \
+      -e 's/versionCode="14"/versionCode="16"/' \
+      -e 's/versionName="1.6.0"/versionName="1.6.2"/' \
       "$ROOT/AndroidManifest.xml" > "$BUILD/AndroidManifest.xml"
   MANIFEST="$BUILD/AndroidManifest.xml"
 fi
