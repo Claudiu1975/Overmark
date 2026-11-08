@@ -162,6 +162,8 @@ public class MainActivity extends Activity implements LocationListener {
     private BroadcastReceiver screenReceiver;
     private boolean alertPosted;
     private long lastAlertAt;
+    private boolean awaitingLocationPermission;
+    private boolean keepAliveWanted;
 
     private static final long RAMP_MS = 4000L;
     private long rampStart;
@@ -203,6 +205,7 @@ public class MainActivity extends Activity implements LocationListener {
     private final Runnable uiTick = new Runnable() {
         @Override
         public void run() {
+            notePermissionRevoked();
             if (tracking) sample(speedKmh, hasFix || testMode);
             else paint();
             handler.postDelayed(this, 100L);
@@ -224,6 +227,7 @@ public class MainActivity extends Activity implements LocationListener {
         super.onCreate(savedInstanceState);
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         I18n.load(this);
+        KeepAliveService.ensureChannel(this);
         if (prefs.getInt("limit_rev", 0) != 2) {
             limitKmh = 90f;
             prefs.edit().putFloat("limit_kmh", 90f).putInt("limit_rev", 2).apply();
@@ -301,7 +305,8 @@ public class MainActivity extends Activity implements LocationListener {
     @Override
     protected void onResume() {
         super.onResume();
-        if (tracking && !testMode && permissionGranted()) beginGps();
+        if (notePermissionRevoked()) paint();
+        else if (tracking && !testMode && permissionGranted()) beginGps();
         if (floatAfterPermission) {
             floatAfterPermission = false;
             if (FloatGauge.canDraw(this)) {
@@ -417,12 +422,12 @@ public class MainActivity extends Activity implements LocationListener {
     public void onRequestPermissionsResult(int code, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(code, permissions, results);
         if (code != REQ_LOCATION) return;
+        awaitingLocationPermission = false;
+        if (testMode) return;
         if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) {
             beginGps();
         } else {
-            tracking = false;
-            resetPace();
-            paint();
+            releaseGps();
         }
     }
 
@@ -510,10 +515,15 @@ public class MainActivity extends Activity implements LocationListener {
             return;
         }
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-            }, REQ_LOCATION);
+            awaitingLocationPermission = true;
+            try {
+                requestPermissions(new String[]{
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                }, REQ_LOCATION);
+            } catch (Exception ignored) {
+                awaitingLocationPermission = false;
+            }
             paint();
             return;
         }
@@ -529,6 +539,10 @@ public class MainActivity extends Activity implements LocationListener {
     private void beginGps() {
         if (!tracking || testMode) return;
         if (locations == null) return;
+        if (!permissionGranted()) {
+            releaseGps();
+            return;
+        }
         boolean enabled;
         try {
             enabled = locations.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -543,13 +557,22 @@ public class MainActivity extends Activity implements LocationListener {
         }
         try {
             locations.requestLocationUpdates(LocationManager.GPS_PROVIDER, 400L, 0f, this);
-            startKeepAlive();
-            ensureNotifyPermission();
         } catch (SecurityException ignored) {
-            tracking = false;
-            resetPace();
-            stopKeepAlive();
+            releaseGps();
+            return;
         }
+        startKeepAlive();
+        ensureNotifyPermission();
+        paint();
+    }
+
+    /** Location was denied or revoked. GPS tracking stops; a running test does not. */
+    private void releaseGps() {
+        tracking = false;
+        stopGps();
+        stopKeepAlive();
+        resetPace();
+        clearKeepScreen();
         paint();
     }
 
@@ -565,22 +588,52 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void startKeepAlive() {
+        if (!LocationGate.canStartLocationForeground(this) || !KeepAliveService.noticeReady(this)) {
+            /* Simulation and on-screen GPS keep running. The location foreground
+               service cannot start without crashing, so drop it if it is up. */
+            if (keepAliveWanted) stopKeepAliveService();
+            return;
+        }
+        keepAliveWanted = true;
         try {
             Intent intent = new Intent(this, KeepAliveService.class);
             if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent);
             else startService(intent);
         } catch (Exception ignored) {
+            keepAliveWanted = false;
             /* GPS still runs while this screen is open */
         }
     }
 
-    private void stopKeepAlive() {
+    private void stopKeepAliveService() {
+        keepAliveWanted = false;
         try {
             stopService(new Intent(this, KeepAliveService.class));
         } catch (Exception ignored) {
             /* already stopped */
         }
+    }
+
+    private void stopKeepAlive() {
+        stopKeepAliveService();
         cancelAlert();
+    }
+
+    /**
+     * Location permission removed while a session is running.
+     * Returns true when GPS tracking was stopped.
+     */
+    private boolean notePermissionRevoked() {
+        if (awaitingLocationPermission) return false;
+        boolean stoppedGps = false;
+        if (keepAliveWanted && !LocationGate.canStartLocationForeground(this)) {
+            stopKeepAliveService();
+        }
+        if (tracking && !testMode && !permissionGranted()) {
+            releaseGps();
+            stoppedGps = true;
+        }
+        return stoppedGps;
     }
 
     private void ensureNotifyPermission() {
@@ -625,31 +678,31 @@ public class MainActivity extends Activity implements LocationListener {
         if (alertPosted && now - lastAlertAt < 1000L) return;
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (manager == null) return;
-        if (Build.VERSION.SDK_INT >= 26 && manager.getNotificationChannel(ALERT_CHANNEL) == null) {
-            NotificationChannel channel = new NotificationChannel(
-                    ALERT_CHANNEL, "Overmark", NotificationManager.IMPORTANCE_HIGH);
-            channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
-            channel.setDescription(I18n.t("alertOver"));
-            manager.createNotificationChannel(channel);
-        }
-        int shown = Math.round(Pace.toDisplay(speedKmh, mph));
-        String unit = mph ? "mph" : "km/h";
-        Notification.Builder builder = Build.VERSION.SDK_INT >= 26
-                ? new Notification.Builder(this, ALERT_CHANNEL)
-                : new Notification.Builder(this);
-        if (Build.VERSION.SDK_INT < 26) builder.setPriority(Notification.PRIORITY_HIGH);
-        Notification note = builder
-                .setContentTitle("Overmark")
-                .setContentText(I18n.t("alertOver") + " · " + shown + " " + unit)
-                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-                .setCategory(Notification.CATEGORY_ALARM)
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
-                .setOngoing(true)
-                .setOnlyAlertOnce(true)
-                .setContentIntent(openAppIntent())
-                .setAutoCancel(false)
-                .build();
         try {
+            if (Build.VERSION.SDK_INT >= 26 && manager.getNotificationChannel(ALERT_CHANNEL) == null) {
+                NotificationChannel channel = new NotificationChannel(
+                        ALERT_CHANNEL, "Overmark", NotificationManager.IMPORTANCE_HIGH);
+                channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+                channel.setDescription(I18n.t("alertOver"));
+                manager.createNotificationChannel(channel);
+            }
+            int shown = Math.round(Pace.toDisplay(speedKmh, mph));
+            String unit = mph ? "mph" : "km/h";
+            Notification.Builder builder = Build.VERSION.SDK_INT >= 26
+                    ? new Notification.Builder(this, ALERT_CHANNEL)
+                    : new Notification.Builder(this);
+            if (Build.VERSION.SDK_INT < 26) builder.setPriority(Notification.PRIORITY_HIGH);
+            Notification note = builder
+                    .setContentTitle("Overmark")
+                    .setContentText(I18n.t("alertOver") + " · " + shown + " " + unit)
+                    .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                    .setCategory(Notification.CATEGORY_ALARM)
+                    .setVisibility(Notification.VISIBILITY_PUBLIC)
+                    .setOngoing(true)
+                    .setOnlyAlertOnce(true)
+                    .setContentIntent(openAppIntent())
+                    .setAutoCancel(false)
+                    .build();
             manager.notify(ALERT_ID, note);
             alertPosted = true;
             lastAlertAt = now;
@@ -662,7 +715,12 @@ public class MainActivity extends Activity implements LocationListener {
         if (!alertPosted) return;
         alertPosted = false;
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (manager != null) manager.cancel(ALERT_ID);
+        if (manager == null) return;
+        try {
+            manager.cancel(ALERT_ID);
+        } catch (Exception ignored) {
+            /* permission or service already gone */
+        }
     }
 
     private void openUrl(String url) {
@@ -766,6 +824,7 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void minimize() {
+        notePermissionRevoked();
         if (tracking) startKeepAlive();
         moveTaskToBack(true);
     }
@@ -782,6 +841,7 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void showFloatAndLeave() {
+        notePermissionRevoked();
         if (tracking) startKeepAlive();
         int shown = Math.round(Pace.toDisplay(speedKmh, mph));
         syncGauge(shown, mph ? "mph" : "km/h");

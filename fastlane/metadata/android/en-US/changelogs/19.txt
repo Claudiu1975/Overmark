@@ -1,0 +1,1 @@
+Test runs without location permission. Arming a simulated speed no longer crashes when location is missing, denied, or taken away, and a denied notification permission does not crash the app either.
