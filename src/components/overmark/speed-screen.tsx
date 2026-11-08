@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Gauge, Info, Settings as SettingsIcon } from "lucide-react";
+import { Gauge, Languages } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useI18n } from "@/components/overmark/i18n";
 import { beep, primeAudio, startAlarm, stopAlarm } from "@/lib/overmark/audio";
@@ -37,7 +37,6 @@ export function SpeedScreen() {
   const [hydrated, setHydrated] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [closed, setClosed] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const overSince = useRef(0);
   const lastBeep = useRef(0);
@@ -282,11 +281,19 @@ export function SpeedScreen() {
   return (
     <>
     <main className="deck mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5">
-      <header className="flex flex-wrap items-center gap-3">
+      <header className="flex items-center gap-3">
         <div className="flex items-center gap-2">
           <Gauge className="size-5 text-signal" aria-hidden="true" />
           <p className="text-sm font-semibold tracking-widest text-fg">OVERMARK</p>
         </div>
+        <button
+          type="button"
+          onClick={() => setPicking(true)}
+          aria-label={t("language")}
+          className="ml-auto inline-flex size-11 items-center justify-center rounded-full border border-line bg-surface text-fg"
+        >
+          <Languages className="size-5" aria-hidden="true" />
+        </button>
       </header>
 
       <section className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
@@ -411,58 +418,12 @@ export function SpeedScreen() {
       </div>
       <p className="text-center text-sm leading-relaxed text-muted">{note}</p>
 
-      <nav className="flex flex-col gap-2" aria-label={t("settings")}>
-        <button
-          type="button"
-          aria-expanded={settingsOpen}
-          onClick={() => setSettingsOpen((open) => !open)}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-line bg-surface text-sm font-semibold text-fg"
-        >
-          <SettingsIcon className="size-4 text-signal" aria-hidden="true" />
-          {t("settings")}
-        </button>
-        {settingsOpen ? (
-          <div className="flex flex-col gap-2">
-          <div className="flex flex-col gap-3 rounded-deck border border-line bg-surface p-4">
-            <p className="text-xs font-semibold tracking-widest text-signal">{t("proTitle")}</p>
-            <p className="text-sm leading-relaxed text-muted">{t("proBody")}</p>
-            <figure className="flex flex-col gap-2">
-              <img src="/pro/pro-under.png" alt={t("proCapUnder")} className="w-full rounded-2xl" />
-              <figcaption className="text-sm text-muted">{t("proCapUnder")}</figcaption>
-            </figure>
-            <figure className="flex flex-col gap-2">
-              <img src="/pro/pro-over.png" alt={t("proCapOver")} className="w-full rounded-2xl" />
-              <figcaption className="text-sm text-muted">{t("proCapOver")}</figcaption>
-            </figure>
-            <figure className="flex flex-col gap-2">
-              <img src="/pro/pro-alarm.png" alt={t("proCapAlarm")} className="w-full rounded-2xl" />
-              <figcaption className="text-sm text-muted">{t("proCapAlarm")}</figcaption>
-            </figure>
-            <p className="text-sm leading-relaxed text-signal">{t("proLinkLater")}</p>
-          </div>
-            <button
-              type="button"
-              onClick={() => setPicking(true)}
-              className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-surface text-sm text-fg"
-            >
-              {t("language")}
-            </button>
-            <Link
-              to="/about"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-line bg-surface text-sm text-fg"
-            >
-              <Info className="size-4 text-signal" aria-hidden="true" />
-              {t("about")}
-            </Link>
-            <Link
-              to="/disclaimer"
-              className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-surface text-sm text-fg"
-            >
-              {t("disclaimerTitle")}
-            </Link>
-          </div>
-        ) : null}
-      </nav>
+      <Link
+        to="/about"
+        className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-surface text-sm font-semibold text-fg"
+      >
+        {t("about")}
+      </Link>
     </main>
     </>
   );

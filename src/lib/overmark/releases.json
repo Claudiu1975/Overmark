@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.6.1",
+    "file": "overmark-basic-1.6.1.apk",
+    "notes": [
+      "Basic only. Pro stays at 1.6.0.",
+      "Language is an icon on the main screen.",
+      "About shows the Pro description, a landscape navigation photo, and the legal text underneath."
+    ]
+  },
+  {
     "version": "1.6.0",
     "file": "overmark-pro-1.6.0.apk",
     "notes": [

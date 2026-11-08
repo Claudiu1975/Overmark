@@ -10,11 +10,15 @@ if [ "$EDITION" = "basic" ]; then
   PRO_VALUE=false
   APP_ID="com.overmark.basic"
   LABEL="Overmark"
+  VERSION_CODE=15
+  VERSION_NAME=1.6.1
 else
   EDITION="pro"
   PRO_VALUE=true
   APP_ID="com.overmark.app"
   LABEL="Overmark Pro"
+  VERSION_CODE=14
+  VERSION_NAME=1.6.0
 fi
 APP_ID_OUT="$APP_ID"
 
@@ -77,15 +81,18 @@ public final class BuildConfig {
     public static final String APPLICATION_ID = "$APP_ID";
     public static final String BUILD_TYPE = "release";
     public static final String FLAVOR = "$EDITION";
-    public static final int VERSION_CODE = 14;
-    public static final String VERSION_NAME = "1.6.0";
+    public static final int VERSION_CODE = $VERSION_CODE;
+    public static final String VERSION_NAME = "$VERSION_NAME";
     public static final boolean PRO = $PRO_VALUE;
 }
 EOF
 
 MANIFEST="$ROOT/AndroidManifest.xml"
 if [ "$EDITION" = "basic" ]; then
-  sed '/SYSTEM_ALERT_WINDOW/d' "$ROOT/AndroidManifest.xml" > "$BUILD/AndroidManifest.xml"
+  sed -e '/SYSTEM_ALERT_WINDOW/d' \
+      -e 's/versionCode="14"/versionCode="15"/' \
+      -e 's/versionName="1.6.0"/versionName="1.6.1"/' \
+      "$ROOT/AndroidManifest.xml" > "$BUILD/AndroidManifest.xml"
   MANIFEST="$BUILD/AndroidManifest.xml"
 fi
 
@@ -124,9 +131,9 @@ mkdir -p "$ROOT/../public" "$ROOT/../artifacts"
 "$BT/apksigner" sign \
   --ks "$KS" --ks-key-alias androiddebugkey \
   --ks-pass pass:android --key-pass pass:android \
-  --out "$ROOT/../public/overmark-$EDITION-1.6.0.apk" \
+  --out "$ROOT/../public/overmark-$EDITION-$VERSION_NAME.apk" \
   "$BUILD/aligned.apk"
-cp "$ROOT/../public/overmark-$EDITION-1.6.0.apk" "$ROOT/../artifacts/Overmark-$EDITION-1.6.0.apk" 2>/dev/null || true
-"$BT/apksigner" verify --verbose "$ROOT/../public/overmark-$EDITION-1.6.0.apk"
-"$BT/aapt" dump badging "$ROOT/../public/overmark-$EDITION-1.6.0.apk" | head -n 12
-ls -lh "$ROOT/../public/overmark-$EDITION-1.6.0.apk"
+cp "$ROOT/../public/overmark-$EDITION-$VERSION_NAME.apk" "$ROOT/../artifacts/Overmark-$EDITION-$VERSION_NAME.apk" 2>/dev/null || true
+"$BT/apksigner" verify --verbose "$ROOT/../public/overmark-$EDITION-$VERSION_NAME.apk"
+"$BT/aapt" dump badging "$ROOT/../public/overmark-$EDITION-$VERSION_NAME.apk" | head -n 12
+ls -lh "$ROOT/../public/overmark-$EDITION-$VERSION_NAME.apk"

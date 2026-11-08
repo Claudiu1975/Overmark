@@ -1000,9 +1000,13 @@ public class MainActivity extends Activity implements LocationListener {
         if (backButton != null) backButton.setText(I18n.t("back"));
         if (disclaimerBack != null) disclaimerBack.setText(I18n.t("back"));
         if (disclaimerAbout != null) disclaimerAbout.setText(I18n.t("about"));
-        if (aboutVersion != null) aboutVersion.setText(I18n.t("version") + " " + versionName);
+        if (aboutVersion != null) {
+            aboutVersion.setText(BuildConfig.PRO ? I18n.t("version") + " " + versionName : I18n.t("about"));
+        }
         if (contactKicker != null) contactKicker.setText(I18n.t("contact"));
-        if (settingsButton != null) settingsButton.setText(I18n.t("settings"));
+        if (settingsButton != null) {
+            settingsButton.setText(BuildConfig.PRO ? I18n.t("settings") : I18n.t("about"));
+        }
         if (settingsBack != null) settingsBack.setText(I18n.t("back"));
         if (settingsTitle != null) settingsTitle.setText(I18n.t("settings"));
         if (aboutStory != null) aboutStory.setText(I18n.t("appStory"));
@@ -1067,9 +1071,26 @@ public class MainActivity extends Activity implements LocationListener {
         LinearLayout col = column();
         col.setPadding(dp(20), dp(18), dp(20), dp(24));
 
+        LinearLayout head = row();
+        head.setGravity(Gravity.CENTER_VERTICAL);
         TextView title = label("OVERMARK", 14, COLOR_FG, true);
         title.setLetterSpacing(0.18f);
-        col.addView(title);
+        title.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        head.addView(title);
+        if (!BuildConfig.PRO) {
+            Button langIcon = chip("Aa", false);
+            langIcon.setContentDescription(I18n.t("language"));
+            langIcon.setLayoutParams(new LinearLayout.LayoutParams(dp(44), dp(44)));
+            langIcon.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+            langIcon.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showLang(true);
+                }
+            });
+            head.addView(langIcon);
+        }
+        col.addView(head);
 
         statusView = label("STANDBY", 12, COLOR_MUTED, true);
         statusView.setLetterSpacing(0.16f);
@@ -1295,7 +1316,7 @@ public class MainActivity extends Activity implements LocationListener {
         hintView.setLineSpacing(dp(3), 1f);
         col.addView(hintView);
 
-        settingsButton = chip(I18n.t("settings"), false);
+        settingsButton = chip(BuildConfig.PRO ? I18n.t("settings") : I18n.t("about"), false);
         LinearLayout.LayoutParams settingsLp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
         settingsLp.topMargin = dp(22);
@@ -1303,7 +1324,8 @@ public class MainActivity extends Activity implements LocationListener {
         settingsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showSettings(true);
+                if (BuildConfig.PRO) showSettings(true);
+                else showAbout(true);
             }
         });
         col.addView(settingsButton);
@@ -1342,38 +1364,36 @@ public class MainActivity extends Activity implements LocationListener {
 
         if (BuildConfig.PRO) {
             addFloatSize(col);
-        } else {
-            addProOffer(col);
-        }
 
-        langButton = chip(I18n.t("language"), false);
-        langButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showLang(true);
+            langButton = chip(I18n.t("language"), false);
+            langButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showLang(true);
+                }
+            });
+            aboutButton = chip(I18n.t("about"), false);
+            aboutButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showAbout(true);
+                }
+            });
+            disclaimerButton = chip(I18n.t("disclaimerTitle"), false);
+            disclaimerButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showDisclaimer(true);
+                }
+            });
+            Button[] items = new Button[] {langButton, aboutButton, disclaimerButton};
+            for (int i = 0; i < items.length; i++) {
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, dp(52));
+                lp.topMargin = dp(10);
+                items[i].setLayoutParams(lp);
+                col.addView(items[i]);
             }
-        });
-        aboutButton = chip(I18n.t("about"), false);
-        aboutButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showAbout(true);
-            }
-        });
-        disclaimerButton = chip(I18n.t("disclaimerTitle"), false);
-        disclaimerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDisclaimer(true);
-            }
-        });
-        Button[] items = new Button[] {langButton, aboutButton, disclaimerButton};
-        for (int i = 0; i < items.length; i++) {
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, dp(52));
-            lp.topMargin = dp(10);
-            items[i].setLayoutParams(lp);
-            col.addView(items[i]);
         }
 
         scroll.addView(col, new ScrollView.LayoutParams(
@@ -1395,6 +1415,13 @@ public class MainActivity extends Activity implements LocationListener {
             }
         });
         col.addView(backButton);
+
+        if (!BuildConfig.PRO) {
+            addBasicAbout(col);
+            scroll.addView(col, new ScrollView.LayoutParams(
+                    ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
+            return scroll;
+        }
 
         TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
         kicker.setLetterSpacing(0.18f);
@@ -1459,6 +1486,60 @@ public class MainActivity extends Activity implements LocationListener {
         scroll.addView(col, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
         return scroll;
+    }
+
+    private void addBasicAbout(LinearLayout col) {
+        TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
+        kicker.setLetterSpacing(0.18f);
+        kicker.setPadding(0, dp(28), 0, dp(8));
+        col.addView(kicker);
+        col.addView(bar());
+
+        aboutVersion = label(I18n.t("about"), 42, COLOR_FG, true);
+        aboutVersion.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        col.addView(aboutVersion);
+
+        proBodyView = label(I18n.t("proBody"), 16, COLOR_FG, false);
+        proBodyView.setPadding(0, dp(16), 0, 0);
+        proBodyView.setLineSpacing(dp(4), 1f);
+        col.addView(proBodyView);
+
+        try {
+            InputStream in = getAssets().open("nav-gauge.jpg");
+            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(in);
+            in.close();
+            if (bitmap != null) {
+                ImageView view = new ImageView(this);
+                view.setImageBitmap(bitmap);
+                view.setAdjustViewBounds(true);
+                view.setContentDescription(I18n.t("proPhoto"));
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.topMargin = dp(16);
+                view.setLayoutParams(lp);
+                col.addView(view);
+            }
+        } catch (Exception ignored) {
+            /* screenshot missing */
+        }
+
+        aboutDisclaimerTitle = label(I18n.t("disclaimerTitle"), 28, COLOR_FG, true);
+        aboutDisclaimerTitle.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        aboutDisclaimerTitle.setPadding(0, dp(28), 0, dp(8));
+        col.addView(aboutDisclaimerTitle);
+
+        aboutDisclaimer = label(I18n.t("disclaimer"), 16, COLOR_MUTED, false);
+        aboutDisclaimer.setLineSpacing(dp(4), 1f);
+        col.addView(aboutDisclaimer);
+
+        aboutPrivacyTitle = label(I18n.t("privacyTitle"), 12, COLOR_MUTED, true);
+        aboutPrivacyTitle.setLetterSpacing(0.16f);
+        aboutPrivacyTitle.setPadding(0, dp(22), 0, dp(6));
+        col.addView(aboutPrivacyTitle);
+
+        aboutPrivacy = label(I18n.t("privacy"), 16, COLOR_MUTED, false);
+        aboutPrivacy.setLineSpacing(dp(4), 1f);
+        col.addView(aboutPrivacy);
     }
 
     private View bar() {

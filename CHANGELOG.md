@@ -2,6 +2,14 @@
 
 Each version stays available. A newer build does not remove older packages.
 
+## 1.6.1 Basic
+
+- Basic only. Pro stays at 1.6.0.
+- Language moves to a small icon on the main screen.
+- About now holds the Pro description, one landscape navigation photo with the gauge, and the legal text underneath.
+
+Package: [public/overmark-basic-1.6.1.apk](public/overmark-basic-1.6.1.apk)
+
 ## 1.6.0
 
 - Overmark is now two apps. Overmark Pro keeps the floating gauge. Overmark Basic does not.
