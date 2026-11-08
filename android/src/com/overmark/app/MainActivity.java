@@ -13,6 +13,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Insets;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.location.Location;
@@ -34,6 +35,7 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -290,7 +292,9 @@ public class MainActivity extends Activity implements LocationListener {
         root.addView(langPane);
         root.addView(settingsPane);
         applyDirection();
+        keepInsideScreen(root);
         setContentView(root);
+        if (Build.VERSION.SDK_INT >= 35) root.requestApplyInsets();
         registerScreenWatch();
 
         if (tracking && !testMode) beginGps();
@@ -1394,8 +1398,28 @@ public class MainActivity extends Activity implements LocationListener {
         col.addView(settingsButton);
 
         scroll.addView(col, new ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.MATCH_PARENT));
+                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
         return scroll;
+    }
+
+    /**
+     * Target SDK 36 is edge-to-edge on Android 15+. The main column is stretched
+     * to the window, so without this padding the top and bottom sit under the
+     * system bars and cannot be scrolled into view.
+     */
+    private void keepInsideScreen(View root) {
+        if (Build.VERSION.SDK_INT < 35) return;
+        root.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+            @Override
+            public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+                int type = WindowInsets.Type.systemBars()
+                        | WindowInsets.Type.displayCutout()
+                        | WindowInsets.Type.ime();
+                Insets bars = insets.getInsets(type);
+                v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+                return new WindowInsets.Builder(insets).setInsets(type, Insets.NONE).build();
+            }
+        });
     }
 
     /** Sub menu of Settings: Language, About, Disclaimer. */
