@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +12,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Insets;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.location.Location;
@@ -34,15 +34,16 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -95,6 +96,7 @@ public class MainActivity extends Activity implements LocationListener {
     private View mainPane;
     private View aboutPane;
     private View disclaimerPane;
+    private View privacyPane;
 
     private float limitKmh = 90f;
     private float speedKmh;
@@ -110,15 +112,28 @@ public class MainActivity extends Activity implements LocationListener {
     private Location previous;
     private Button aboutButton;
     private Button disclaimerButton;
+    private Button privacyButton;
+    private TextView privacyHeading;
+    private TextView privacyBody;
+    private TextView floatSizeLabel;
+    private TextView floatHintView;
+    private TextView proTitleView;
+    private TextView proBodyView;
+    private TextView proLinkView;
     private Button langButton;
     private Button minusButton;
     private Button plusButton;
     private Button exitButton;
     private Button minimizeButton;
     private Button floatButton;
+    private Button floatSmallButton;
+    private Button floatLargeButton;
+    private String floatSize = FloatGauge.SMALL;
+    private boolean floatAfterPermission;
     private Button backButton;
     private Button disclaimerBack;
     private Button disclaimerAbout;
+    private Button privacyBack;
     private TextView limitLabel;
     private TextView aboutVersion;
     private TextView contactKicker;
@@ -128,18 +143,6 @@ public class MainActivity extends Activity implements LocationListener {
     private Button settingsButton;
     private Button settingsBack;
     private TextView settingsTitle;
-    private TextView floatSizeLabel;
-    private TextView floatHintView;
-    private Button floatSmallButton;
-    private Button floatLargeButton;
-    private TextView proTitleView;
-    private TextView proBodyView;
-    private TextView proLinkView;
-    private TextView proCap1;
-    private TextView proCap2;
-    private TextView proCap3;
-    private String floatSize = FloatGauge.SMALL;
-    private boolean floatAfterPermission;
     private TextView aboutDisclaimerTitle;
     private TextView aboutDisclaimer;
     private TextView aboutPrivacyTitle;
@@ -158,54 +161,14 @@ public class MainActivity extends Activity implements LocationListener {
     private EditText langSearch;
     private View langPane;
     private View rootView;
-    private String versionName = "1.6.0";
+    private String versionName = "1.5.0";
     private BroadcastReceiver screenReceiver;
     private boolean alertPosted;
     private long lastAlertAt;
-    private boolean awaitingLocationPermission;
-    private boolean keepAliveWanted;
-
-    private static final long RAMP_MS = 4000L;
-    private long rampStart;
-    private float rampTarget;
-    private boolean ramping;
-    private final Runnable rampStep = new Runnable() { public void run() {
-        if (!ramping || !tracking || !testMode) { ramping = false; return; }
-        float rate = rampTarget / (float) RAMP_MS;
-        float top = Math.min(250f, rampTarget + Math.max(10f, rampTarget * 0.1f));
-        float v = Math.min(top, rate * (SystemClock.uptimeMillis() - rampStart));
-        testKmh = v;
-        sample(testKmh, true);
-        if (v < top) handler.postDelayed(this, 50L); else ramping = false; } };
-
-    private void startRamp() {
-        rampTarget = limitKmh;
-        rampStart = SystemClock.uptimeMillis();
-        testKmh = 0f;
-        ramping = true;
-        handler.removeCallbacks(rampStep);
-        sample(testKmh, true);
-        handler.postDelayed(rampStep, 50L);
-    }
-
-    private void stopRamp() {
-        ramping = false;
-        handler.removeCallbacks(rampStep);
-    }
-
-    private PendingIntent openAppIntent() {
-        Intent open = new Intent(this, MainActivity.class)
-                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP
-                        | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (Build.VERSION.SDK_INT >= 23) flags |= PendingIntent.FLAG_IMMUTABLE;
-        return PendingIntent.getActivity(this, 0, open, flags);
-    }
 
     private final Runnable uiTick = new Runnable() {
         @Override
         public void run() {
-            notePermissionRevoked();
             if (tracking) sample(speedKmh, hasFix || testMode);
             else paint();
             handler.postDelayed(this, 100L);
@@ -227,7 +190,6 @@ public class MainActivity extends Activity implements LocationListener {
         super.onCreate(savedInstanceState);
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
         I18n.load(this);
-        KeepAliveService.ensureChannel(this);
         if (prefs.getInt("limit_rev", 0) != 2) {
             limitKmh = 90f;
             prefs.edit().putFloat("limit_kmh", 90f).putInt("limit_rev", 2).apply();
@@ -252,6 +214,11 @@ public class MainActivity extends Activity implements LocationListener {
 
         getWindow().setStatusBarColor(COLOR_BG);
         getWindow().setNavigationBarColor(COLOR_BG);
+        if (Build.VERSION.SDK_INT >= 29) {
+            getWindow().setStatusBarContrastEnforced(false);
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
+        if (Build.VERSION.SDK_INT >= 35) getWindow().setDecorFitsSystemWindows(false);
 
         if (savedInstanceState != null) {
             tracking = savedInstanceState.getBoolean("tracking");
@@ -278,19 +245,24 @@ public class MainActivity extends Activity implements LocationListener {
         mainPane = buildMain();
         aboutPane = buildAbout();
         disclaimerPane = buildDisclaimer();
+        privacyPane = buildPrivacy();
         langPane = buildLanguage();
         settingsPane = buildSettings();
         settingsPane.setVisibility(View.GONE);
         aboutPane.setVisibility(View.GONE);
         disclaimerPane.setVisibility(View.GONE);
+        privacyPane.setVisibility(View.GONE);
         langPane.setVisibility(View.GONE);
         root.addView(mainPane);
         root.addView(aboutPane);
         root.addView(disclaimerPane);
+        root.addView(privacyPane);
         root.addView(langPane);
         root.addView(settingsPane);
         applyDirection();
+        keepInsideScreen(root);
         setContentView(root);
+        if (Build.VERSION.SDK_INT >= 35) root.requestApplyInsets();
         registerScreenWatch();
 
         if (tracking && !testMode) beginGps();
@@ -305,8 +277,7 @@ public class MainActivity extends Activity implements LocationListener {
     @Override
     protected void onResume() {
         super.onResume();
-        if (notePermissionRevoked()) paint();
-        else if (tracking && !testMode && permissionGranted()) beginGps();
+        if (tracking && !testMode && permissionGranted()) beginGps();
         if (floatAfterPermission) {
             floatAfterPermission = false;
             if (FloatGauge.canDraw(this)) {
@@ -360,6 +331,10 @@ public class MainActivity extends Activity implements LocationListener {
     public void onBackPressed() {
         if (langPane.getVisibility() == View.VISIBLE) {
             showLang(false);
+            return;
+        }
+        if (privacyPane.getVisibility() == View.VISIBLE) {
+            showPrivacy(false);
             return;
         }
         if (disclaimerPane.getVisibility() == View.VISIBLE) {
@@ -422,12 +397,10 @@ public class MainActivity extends Activity implements LocationListener {
     public void onRequestPermissionsResult(int code, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(code, permissions, results);
         if (code != REQ_LOCATION) return;
-        awaitingLocationPermission = false;
-        if (testMode) return;
         if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) {
             beginGps();
         } else {
-            releaseGps();
+            standbyGps();
         }
     }
 
@@ -463,16 +436,10 @@ public class MainActivity extends Activity implements LocationListener {
         cancelAlert();
     }
 
-    /** One short vibration. Android 7 has no amplitude control, so only the length is used there. */
-    private void buzz(long ms, int amplitude) {
-        if (Build.VERSION.SDK_INT >= 26) vibrator.vibrate(VibrationEffect.createOneShot(ms, amplitude));
-        else vibrator.vibrate(ms);
-    }
-
     private void playBeep() {
         if (sound != null) sound.beep();
         if (vibrator != null && vibrator.hasVibrator()) {
-            buzz(18, 40);
+            vibrator.vibrate(VibrationEffect.createOneShot(18, 40));
         }
     }
 
@@ -484,7 +451,7 @@ public class MainActivity extends Activity implements LocationListener {
         handler.removeCallbacks(flashTick);
         handler.post(flashTick);
         if (vibrator != null && vibrator.hasVibrator()) {
-            buzz(160, VibrationEffect.DEFAULT_AMPLITUDE);
+            vibrator.vibrate(VibrationEffect.createOneShot(160, VibrationEffect.DEFAULT_AMPLITUDE));
         }
     }
 
@@ -509,21 +476,14 @@ public class MainActivity extends Activity implements LocationListener {
         resetPace();
         keepScreen();
         if (testMode) {
-            startKeepAlive();
-            ensureNotifyPermission();
-            startRamp();
+            sample(testKmh, true);
             return;
         }
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            awaitingLocationPermission = true;
-            try {
-                requestPermissions(new String[]{
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                }, REQ_LOCATION);
-            } catch (Exception ignored) {
-                awaitingLocationPermission = false;
-            }
+            requestPermissions(new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+            }, REQ_LOCATION);
             paint();
             return;
         }
@@ -540,7 +500,7 @@ public class MainActivity extends Activity implements LocationListener {
         if (!tracking || testMode) return;
         if (locations == null) return;
         if (!permissionGranted()) {
-            releaseGps();
+            standbyGps();
             return;
         }
         boolean enabled;
@@ -558,7 +518,7 @@ public class MainActivity extends Activity implements LocationListener {
         try {
             locations.requestLocationUpdates(LocationManager.GPS_PROVIDER, 400L, 0f, this);
         } catch (SecurityException ignored) {
-            releaseGps();
+            standbyGps();
             return;
         }
         startKeepAlive();
@@ -566,8 +526,8 @@ public class MainActivity extends Activity implements LocationListener {
         paint();
     }
 
-    /** Location was denied or revoked. GPS tracking stops; a running test does not. */
-    private void releaseGps() {
+    /** Location was denied or revoked. Test mode is left running. */
+    private void standbyGps() {
         tracking = false;
         stopGps();
         stopKeepAlive();
@@ -588,52 +548,28 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void startKeepAlive() {
-        if (!LocationGate.canStartLocationForeground(this) || !KeepAliveService.noticeReady(this)) {
-            /* Simulation and on-screen GPS keep running. The location foreground
-               service cannot start without crashing, so drop it if it is up. */
-            if (keepAliveWanted) stopKeepAliveService();
-            return;
-        }
-        keepAliveWanted = true;
+        if (!hasLocationPermission()) return;
         try {
             Intent intent = new Intent(this, KeepAliveService.class);
             if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent);
             else startService(intent);
         } catch (Exception ignored) {
-            keepAliveWanted = false;
             /* GPS still runs while this screen is open */
         }
     }
 
-    private void stopKeepAliveService() {
-        keepAliveWanted = false;
+    private boolean hasLocationPermission() {
+        return checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void stopKeepAlive() {
         try {
             stopService(new Intent(this, KeepAliveService.class));
         } catch (Exception ignored) {
             /* already stopped */
         }
-    }
-
-    private void stopKeepAlive() {
-        stopKeepAliveService();
         cancelAlert();
-    }
-
-    /**
-     * Location permission removed while a session is running.
-     * Returns true when GPS tracking was stopped.
-     */
-    private boolean notePermissionRevoked() {
-        if (awaitingLocationPermission) return false;
-        boolean stoppedGps = false;
-        if (keepAliveWanted && !LocationGate.canStartLocationForeground(this)) {
-            stopKeepAliveService();
-        }
-        if (tracking && !testMode && !permissionGranted()) {
-            releaseGps();
-            stoppedGps = true;
-        }
-        return stoppedGps;
     }
 
     private void ensureNotifyPermission() {
@@ -669,7 +605,7 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void syncAlert() {
-        boolean show = tracking && hasFix && Pace.overLimit(speedKmh, limitKmh) && screenIsOff();
+        boolean show = tracking && !testMode && hasFix && Pace.overLimit(speedKmh, limitKmh) && screenIsOff();
         if (!show) {
             cancelAlert();
             return;
@@ -678,31 +614,25 @@ public class MainActivity extends Activity implements LocationListener {
         if (alertPosted && now - lastAlertAt < 1000L) return;
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (manager == null) return;
+        if (Build.VERSION.SDK_INT >= 26 && manager.getNotificationChannel(ALERT_CHANNEL) == null) {
+            NotificationChannel channel = new NotificationChannel(
+                    ALERT_CHANNEL, "Overmark", NotificationManager.IMPORTANCE_HIGH);
+            channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+            channel.setDescription(I18n.t("alertOver"));
+            manager.createNotificationChannel(channel);
+        }
+        int shown = Math.round(Pace.toDisplay(speedKmh, mph));
+        String unit = mph ? "mph" : "km/h";
+        Notification note = new Notification.Builder(this, ALERT_CHANNEL)
+                .setContentTitle("Overmark")
+                .setContentText(I18n.t("alertOver") + " · " + shown + " " + unit)
+                .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                .setCategory(Notification.CATEGORY_ALARM)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .build();
         try {
-            if (Build.VERSION.SDK_INT >= 26 && manager.getNotificationChannel(ALERT_CHANNEL) == null) {
-                NotificationChannel channel = new NotificationChannel(
-                        ALERT_CHANNEL, "Overmark", NotificationManager.IMPORTANCE_HIGH);
-                channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
-                channel.setDescription(I18n.t("alertOver"));
-                manager.createNotificationChannel(channel);
-            }
-            int shown = Math.round(Pace.toDisplay(speedKmh, mph));
-            String unit = mph ? "mph" : "km/h";
-            Notification.Builder builder = Build.VERSION.SDK_INT >= 26
-                    ? new Notification.Builder(this, ALERT_CHANNEL)
-                    : new Notification.Builder(this);
-            if (Build.VERSION.SDK_INT < 26) builder.setPriority(Notification.PRIORITY_HIGH);
-            Notification note = builder
-                    .setContentTitle("Overmark")
-                    .setContentText(I18n.t("alertOver") + " · " + shown + " " + unit)
-                    .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-                    .setCategory(Notification.CATEGORY_ALARM)
-                    .setVisibility(Notification.VISIBILITY_PUBLIC)
-                    .setOngoing(true)
-                    .setOnlyAlertOnce(true)
-                    .setContentIntent(openAppIntent())
-                    .setAutoCancel(false)
-                    .build();
             manager.notify(ALERT_ID, note);
             alertPosted = true;
             lastAlertAt = now;
@@ -715,12 +645,7 @@ public class MainActivity extends Activity implements LocationListener {
         if (!alertPosted) return;
         alertPosted = false;
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (manager == null) return;
-        try {
-            manager.cancel(ALERT_ID);
-        } catch (Exception ignored) {
-            /* permission or service already gone */
-        }
+        if (manager != null) manager.cancel(ALERT_ID);
     }
 
     private void openUrl(String url) {
@@ -777,20 +702,19 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void showAbout(boolean show) {
-        showPane(show ? aboutPane : underPage());
+        showPane(show ? aboutPane : settingsPane);
     }
 
     private void showDisclaimer(boolean show) {
-        showPane(show ? disclaimerPane : underPage());
+        showPane(show ? disclaimerPane : settingsPane);
+    }
+
+    private void showPrivacy(boolean show) {
+        showPane(show ? privacyPane : settingsPane);
     }
 
     private void showLang(boolean show) {
-        showPane(show ? langPane : underPage());
-    }
-
-    /** Language and About always return to the main screen. */
-    private View underPage() {
-        return null;
+        showPane(show ? langPane : settingsPane);
     }
 
     private void showSettings(boolean show) {
@@ -802,6 +726,9 @@ public class MainActivity extends Activity implements LocationListener {
         if (aboutPane != null) aboutPane.setVisibility(pane == aboutPane ? View.VISIBLE : View.GONE);
         if (disclaimerPane != null) {
             disclaimerPane.setVisibility(pane == disclaimerPane ? View.VISIBLE : View.GONE);
+        }
+        if (privacyPane != null) {
+            privacyPane.setVisibility(pane == privacyPane ? View.VISIBLE : View.GONE);
         }
         if (langPane != null) langPane.setVisibility(pane == langPane ? View.VISIBLE : View.GONE);
         if (settingsPane != null) settingsPane.setVisibility(pane == settingsPane ? View.VISIBLE : View.GONE);
@@ -824,128 +751,8 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void minimize() {
-        notePermissionRevoked();
-        if (tracking) startKeepAlive();
+        if (tracking && !testMode) startKeepAlive();
         moveTaskToBack(true);
-    }
-
-    private void onFloat() {
-        if (!FloatGauge.canDraw(this)) {
-            floatAfterPermission = true;
-            Toast.makeText(this, I18n.t("floatNeed"), Toast.LENGTH_LONG).show();
-            startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + getPackageName())));
-            return;
-        }
-        showFloatAndLeave();
-    }
-
-    private void showFloatAndLeave() {
-        notePermissionRevoked();
-        if (tracking) startKeepAlive();
-        int shown = Math.round(Pace.toDisplay(speedKmh, mph));
-        syncGauge(shown, mph ? "mph" : "km/h");
-        FloatGauge.show(getApplicationContext(), floatSize);
-        moveTaskToBack(true);
-    }
-
-    private void setFloatSize(String size) {
-        floatSize = FloatGauge.LARGE.equals(size) ? FloatGauge.LARGE : FloatGauge.SMALL;
-        prefs.edit().putString("float_size", floatSize).apply();
-        if (floatSmallButton != null) styleChoice(floatSmallButton, !FloatGauge.LARGE.equals(floatSize));
-        if (floatLargeButton != null) styleChoice(floatLargeButton, FloatGauge.LARGE.equals(floatSize));
-        if (FloatGauge.showing()) FloatGauge.show(getApplicationContext(), floatSize);
-    }
-
-    private void addFloatSize(LinearLayout col) {
-        floatSizeLabel = label(I18n.t("floatSize"), 12, COLOR_MUTED, true);
-        floatSizeLabel.setLetterSpacing(0.12f);
-        floatSizeLabel.setPadding(0, dp(8), 0, dp(8));
-        col.addView(floatSizeLabel);
-
-        LinearLayout sizes = row();
-        LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        rowLp.topMargin = dp(4);
-        sizes.setLayoutParams(rowLp);
-        floatSmallButton = chip(I18n.t("floatSmall"), !FloatGauge.LARGE.equals(floatSize));
-        floatLargeButton = chip(I18n.t("floatLarge"), FloatGauge.LARGE.equals(floatSize));
-        LinearLayout.LayoutParams sizeA = new LinearLayout.LayoutParams(0, dp(48), 1f);
-        floatSmallButton.setLayoutParams(sizeA);
-        LinearLayout.LayoutParams sizeB = new LinearLayout.LayoutParams(0, dp(48), 1f);
-        sizeB.leftMargin = dp(8);
-        floatLargeButton.setLayoutParams(sizeB);
-        floatSmallButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setFloatSize(FloatGauge.SMALL);
-            }
-        });
-        floatLargeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setFloatSize(FloatGauge.LARGE);
-            }
-        });
-        sizes.addView(floatSmallButton);
-        sizes.addView(floatLargeButton);
-        col.addView(sizes);
-
-        floatHintView = label(I18n.t("floatHint"), 14, COLOR_MUTED, false);
-        floatHintView.setPadding(0, dp(8), 0, dp(6));
-        floatHintView.setLineSpacing(dp(3), 1f);
-        col.addView(floatHintView);
-    }
-
-    private void addProOffer(LinearLayout col) {
-        proTitleView = label(I18n.t("proTitle"), 22, COLOR_FG, true);
-        proTitleView.setPadding(0, dp(18), 0, dp(8));
-        col.addView(proTitleView);
-        proBodyView = label(I18n.t("proBody"), 15, COLOR_MUTED, false);
-        proBodyView.setLineSpacing(dp(3), 1f);
-        col.addView(proBodyView);
-        addShot(col, "pro-under.png", "proCapUnder");
-        addShot(col, "pro-over.png", "proCapOver");
-        addShot(col, "pro-alarm.png", "proCapAlarm");
-        proLinkView = label(I18n.t("proLinkLater"), 14, COLOR_SIGNAL, false);
-        proLinkView.setPadding(0, dp(8), 0, dp(12));
-        proLinkView.setLineSpacing(dp(3), 1f);
-        col.addView(proLinkView);
-    }
-
-    private void addShot(LinearLayout col, String asset, String captionKey) {
-        try {
-            InputStream in = getAssets().open(asset);
-            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(in);
-            in.close();
-            if (bitmap != null) {
-                ImageView view = new ImageView(this);
-                view.setImageBitmap(bitmap);
-                view.setAdjustViewBounds(true);
-                view.setContentDescription(I18n.t(captionKey));
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                lp.topMargin = dp(14);
-                view.setLayoutParams(lp);
-                col.addView(view);
-            }
-        } catch (Exception ignored) {
-            /* screenshot missing */
-        }
-        TextView caption = label(I18n.t(captionKey), 13, COLOR_MUTED, false);
-        caption.setPadding(0, dp(6), 0, 0);
-        if ("proCapUnder".equals(captionKey)) proCap1 = caption;
-        else if ("proCapOver".equals(captionKey)) proCap2 = caption;
-        else proCap3 = caption;
-        col.addView(caption);
-    }
-
-    private void syncGauge(int shown, String unit) {
-        long elapsed = overSince >= 0L ? SystemClock.elapsedRealtime() - overSince : 0L;
-        boolean over = tracking && (hasFix || testMode) && Pace.overLimit(speedKmh, limitKmh) && overSince >= 0L;
-        int seconds = 0;
-        if (over && elapsed >= 0L) seconds = (int) Math.min(60L, elapsed / 1000L);
-        FloatGauge.update(shown, unit, over, alarming, flashOn, seconds);
     }
 
     private void exitApp() {
@@ -955,7 +762,6 @@ public class MainActivity extends Activity implements LocationListener {
         resetPace();
         clearKeepScreen();
         stopKeepAlive();
-        FloatGauge.hide();
         wipeVolatile();
         finishAndRemoveTask();
     }
@@ -968,12 +774,11 @@ public class MainActivity extends Activity implements LocationListener {
         String lang = prefs.getString("lang", null);
         float limit = prefs.getFloat("limit_kmh", 90f);
         boolean useMph = prefs.getBoolean("mph", false);
-        String gauge = prefs.getString("float_size", FloatGauge.SMALL);
         SharedPreferences.Editor editor = prefs.edit();
         editor.clear();
         editor.putFloat("limit_kmh", limit);
         editor.putBoolean("mph", useMph);
-        editor.putString("float_size", gauge);
+        editor.putString("float_size", floatSize);
         editor.putInt("limit_rev", 2);
         if (lang != null) editor.putString("lang", lang);
         editor.apply();
@@ -1042,8 +847,12 @@ public class MainActivity extends Activity implements LocationListener {
     private void relabel() {
         if (aboutButton != null) aboutButton.setText(I18n.t("about"));
         if (disclaimerButton != null) disclaimerButton.setText(I18n.t("disclaimerTitle"));
+        if (privacyButton != null) privacyButton.setText(I18n.t("privacyPage"));
+        if (privacyHeading != null) privacyHeading.setText(I18n.t("privacyPage"));
+        if (privacyBody != null) privacyBody.setText(I18n.t("privacy"));
+        if (privacyBack != null) privacyBack.setText(I18n.t("back"));
         if (langButton != null) langButton.setText(I18n.t("language"));
-        if (gpsButton != null) gpsButton.setText("GPS");
+        if (gpsButton != null) gpsButton.setText(I18n.t("gps"));
         if (testButton != null) testButton.setText(I18n.t("test"));
         if (exitButton != null) exitButton.setText(I18n.t("exit"));
         if (minimizeButton != null) minimizeButton.setText(I18n.t("minimize"));
@@ -1053,9 +862,6 @@ public class MainActivity extends Activity implements LocationListener {
         if (proTitleView != null) proTitleView.setText(I18n.t("proTitle"));
         if (proBodyView != null) proBodyView.setText(I18n.t("proBody"));
         if (proLinkView != null) proLinkView.setText(I18n.t("proLinkLater"));
-        if (proCap1 != null) proCap1.setText(I18n.t("proCapUnder"));
-        if (proCap2 != null) proCap2.setText(I18n.t("proCapOver"));
-        if (proCap3 != null) proCap3.setText(I18n.t("proCapAlarm"));
         if (floatSmallButton != null) {
             floatSmallButton.setText(I18n.t("floatSmall"));
             styleChoice(floatSmallButton, !FloatGauge.LARGE.equals(floatSize));
@@ -1070,9 +876,9 @@ public class MainActivity extends Activity implements LocationListener {
         if (backButton != null) backButton.setText(I18n.t("back"));
         if (disclaimerBack != null) disclaimerBack.setText(I18n.t("back"));
         if (disclaimerAbout != null) disclaimerAbout.setText(I18n.t("about"));
-        if (aboutVersion != null) aboutVersion.setText(I18n.t("about"));
+        if (aboutVersion != null) aboutVersion.setText(I18n.t("version") + " " + versionName);
         if (contactKicker != null) contactKicker.setText(I18n.t("contact"));
-        if (settingsButton != null) settingsButton.setText(I18n.t("about"));
+        if (settingsButton != null) settingsButton.setText(I18n.t("settings"));
         if (settingsBack != null) settingsBack.setText(I18n.t("back"));
         if (settingsTitle != null) settingsTitle.setText(I18n.t("settings"));
         if (aboutStory != null) aboutStory.setText(I18n.t("appStory"));
@@ -1137,24 +943,9 @@ public class MainActivity extends Activity implements LocationListener {
         LinearLayout col = column();
         col.setPadding(dp(20), dp(18), dp(20), dp(24));
 
-        LinearLayout head = row();
-        head.setGravity(Gravity.CENTER_VERTICAL);
         TextView title = label("OVERMARK", 14, COLOR_FG, true);
         title.setLetterSpacing(0.18f);
-        title.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        head.addView(title);
-        Button langIcon = chip("Aa", false);
-        langIcon.setContentDescription(I18n.t("language"));
-        langIcon.setLayoutParams(new LinearLayout.LayoutParams(dp(44), dp(44)));
-        langIcon.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        langIcon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showLang(true);
-            }
-        });
-        head.addView(langIcon);
-        col.addView(head);
+        col.addView(title);
 
         statusView = label("STANDBY", 12, COLOR_MUTED, true);
         statusView.setLetterSpacing(0.16f);
@@ -1256,8 +1047,8 @@ public class MainActivity extends Activity implements LocationListener {
 
         LinearLayout modes = row();
         modes.setPadding(0, dp(12), 0, 0);
-        gpsButton = chip("GPS", true);
-        testButton = chip("Test", false);
+        gpsButton = chip(I18n.t("gps"), true);
+        testButton = chip(I18n.t("test"), false);
         LinearLayout.LayoutParams half = new LinearLayout.LayoutParams(0, dp(48), 1f);
         gpsButton.setLayoutParams(half);
         LinearLayout.LayoutParams half2 = new LinearLayout.LayoutParams(0, dp(48), 1f);
@@ -1291,7 +1082,6 @@ public class MainActivity extends Activity implements LocationListener {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (!fromUser) return;
-                stopRamp();
                 testKmh = Pace.fromDisplay(progress, mph);
                 if (tracking && testMode) sample(testKmh, true);
                 else paint();
@@ -1332,18 +1122,11 @@ public class MainActivity extends Activity implements LocationListener {
         power.setPadding(0, dp(8), 0, 0);
         minimizeButton = chip(I18n.t("minimize"), false);
         exitButton = chip(I18n.t("exit"), false);
-        if (BuildConfig.PRO) {
-            floatButton = chip(I18n.t("floatGauge"), false);
-        }
-        LinearLayout.LayoutParams slot = new LinearLayout.LayoutParams(0, dp(48), 1f);
-        minimizeButton.setLayoutParams(slot);
-        LinearLayout.LayoutParams slotExit = new LinearLayout.LayoutParams(0, dp(48), 1f);
-        slotExit.leftMargin = dp(8);
-        exitButton.setLayoutParams(slotExit);
-        minimizeButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        exitButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        minimizeButton.setPadding(dp(4), 0, dp(4), 0);
-        exitButton.setPadding(dp(4), 0, dp(4), 0);
+        LinearLayout.LayoutParams halfM = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        minimizeButton.setLayoutParams(halfM);
+        LinearLayout.LayoutParams halfE = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        halfE.leftMargin = dp(8);
+        exitButton.setLayoutParams(halfE);
         minimizeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1357,12 +1140,12 @@ public class MainActivity extends Activity implements LocationListener {
             }
         });
         power.addView(minimizeButton);
-        if (floatButton != null) {
-            LinearLayout.LayoutParams slotFloat = new LinearLayout.LayoutParams(0, dp(48), 1f);
-            slotFloat.leftMargin = dp(8);
-            floatButton.setLayoutParams(slotFloat);
+        if (BuildConfig.PRO) {
+            floatButton = chip(I18n.t("floatGauge"), false);
+            LinearLayout.LayoutParams halfF = new LinearLayout.LayoutParams(0, dp(48), 1f);
+            halfF.leftMargin = dp(8);
+            floatButton.setLayoutParams(halfF);
             floatButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-            floatButton.setPadding(dp(4), 0, dp(4), 0);
             floatButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -1380,7 +1163,7 @@ public class MainActivity extends Activity implements LocationListener {
         hintView.setLineSpacing(dp(3), 1f);
         col.addView(hintView);
 
-        settingsButton = chip(I18n.t("about"), false);
+        settingsButton = chip(I18n.t("settings"), false);
         LinearLayout.LayoutParams settingsLp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
         settingsLp.topMargin = dp(22);
@@ -1388,13 +1171,13 @@ public class MainActivity extends Activity implements LocationListener {
         settingsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showAbout(true);
+                showSettings(true);
             }
         });
         col.addView(settingsButton);
 
         scroll.addView(col, new ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.MATCH_PARENT));
+                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
         return scroll;
     }
 
@@ -1424,6 +1207,81 @@ public class MainActivity extends Activity implements LocationListener {
         settingsTitle.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
         settingsTitle.setPadding(0, 0, 0, dp(10));
         col.addView(settingsTitle);
+        if (BuildConfig.PRO) addGaugeSettings(col);
+        else addProPitch(col);
+
+        langButton = chip(I18n.t("language"), false);
+        langButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showLang(true);
+            }
+        });
+        aboutButton = chip(I18n.t("about"), false);
+        aboutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAbout(true);
+            }
+        });
+        disclaimerButton = chip(I18n.t("disclaimerTitle"), false);
+        disclaimerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDisclaimer(true);
+            }
+        });
+        privacyButton = chip(I18n.t("privacyPage"), false);
+        privacyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showPrivacy(true);
+            }
+        });
+        Button[] items = new Button[] {langButton, aboutButton, disclaimerButton, privacyButton};
+        for (int i = 0; i < items.length; i++) {
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, dp(52));
+            lp.topMargin = dp(10);
+            items[i].setLayoutParams(lp);
+            col.addView(items[i]);
+        }
+
+        scroll.addView(col, new ScrollView.LayoutParams(
+                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
+        return scroll;
+    }
+
+    private View buildPrivacy() {
+        ScrollView scroll = new ScrollView(this);
+        scroll.setBackgroundColor(COLOR_BG);
+        LinearLayout col = column();
+        col.setPadding(dp(20), dp(18), dp(20), dp(28));
+
+        privacyBack = chip(I18n.t("back"), false);
+        privacyBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showPrivacy(false);
+            }
+        });
+        col.addView(privacyBack);
+
+        TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
+        kicker.setLetterSpacing(0.18f);
+        kicker.setPadding(0, dp(28), 0, dp(8));
+        col.addView(kicker);
+        col.addView(bar());
+
+        privacyHeading = label(I18n.t("privacyPage"), 36, COLOR_FG, true);
+        privacyHeading.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        col.addView(privacyHeading);
+
+        privacyBody = label(I18n.t("privacy"), 16, COLOR_FG, false);
+        TextView text = privacyBody;
+        text.setPadding(0, dp(16), 0, 0);
+        text.setLineSpacing(dp(4), 1f);
+        col.addView(text);
 
         scroll.addView(col, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
@@ -1444,66 +1302,70 @@ public class MainActivity extends Activity implements LocationListener {
             }
         });
         col.addView(backButton);
-        addBasicAbout(col);
-        scroll.addView(col, new ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
-        return scroll;
-    }
 
-    private void addBasicAbout(LinearLayout col) {
         TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
         kicker.setLetterSpacing(0.18f);
         kicker.setPadding(0, dp(28), 0, dp(8));
         col.addView(kicker);
         col.addView(bar());
 
-        aboutVersion = label(I18n.t("about"), 42, COLOR_FG, true);
+        aboutVersion = label(I18n.t("version") + " " + versionName, 42, COLOR_FG, true);
         aboutVersion.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
         col.addView(aboutVersion);
 
-        proBodyView = label(I18n.t("proBody"), 16, COLOR_FG, false);
-        proBodyView.setPadding(0, dp(16), 0, 0);
-        proBodyView.setLineSpacing(dp(4), 1f);
-        col.addView(proBodyView);
+        aboutStory = label(I18n.t("appStory"), 16, COLOR_MUTED, false);
+        aboutStory.setPadding(0, dp(16), 0, 0);
+        aboutStory.setLineSpacing(dp(4), 1f);
+        col.addView(aboutStory);
 
-        try {
-            InputStream in = getAssets().open("nav-gauge.jpg");
-            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(in);
-            in.close();
-            if (bitmap != null) {
-                ImageView view = new ImageView(this);
-                view.setImageBitmap(bitmap);
-                view.setAdjustViewBounds(true);
-                view.setContentDescription(I18n.t("proPhoto"));
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                lp.topMargin = dp(16);
-                view.setLayoutParams(lp);
-                col.addView(view);
+        aboutHow = label(I18n.t("how"), 16, COLOR_MUTED, false);
+        aboutHow.setPadding(0, dp(16), 0, 0);
+        aboutHow.setLineSpacing(dp(4), 1f);
+        col.addView(aboutHow);
+
+        aboutOpen = label(I18n.t("openSource"), 16, COLOR_FG, false);
+        aboutOpen.setPadding(0, dp(16), 0, dp(10));
+        aboutOpen.setLineSpacing(dp(4), 1f);
+        col.addView(aboutOpen);
+
+        sourceButton = chip(I18n.t("sourceCode"), false);
+        LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
+        sourceButton.setLayoutParams(sourceLp);
+        sourceButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openUrl(REPO);
             }
-        } catch (Exception ignored) {
-            /* screenshot missing */
-        }
+        });
+        col.addView(sourceButton);
 
-        if (BuildConfig.PRO) addFloatSize(col);
+        contactKicker = label(I18n.t("contact"), 12, COLOR_MUTED, true);
+        contactKicker.setLetterSpacing(0.16f);
+        contactKicker.setPadding(0, dp(56), 0, dp(8));
+        col.addView(contactKicker);
+        col.addView(bar());
 
-        aboutDisclaimerTitle = label(I18n.t("disclaimerTitle"), 28, COLOR_FG, true);
-        aboutDisclaimerTitle.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
-        aboutDisclaimerTitle.setPadding(0, dp(28), 0, dp(8));
-        col.addView(aboutDisclaimerTitle);
+        contactBrand = label(BRAND, 36, COLOR_FG, true);
+        contactBrand.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        col.addView(contactBrand);
 
-        aboutDisclaimer = label(I18n.t("disclaimer"), 16, COLOR_MUTED, false);
-        aboutDisclaimer.setLineSpacing(dp(4), 1f);
-        col.addView(aboutDisclaimer);
+        emailButton = chip(CONTACT_EMAIL, true);
+        LinearLayout.LayoutParams emailLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(52));
+        emailLp.topMargin = dp(14);
+        emailButton.setLayoutParams(emailLp);
+        emailButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openUrl("mailto:" + CONTACT_EMAIL);
+            }
+        });
+        col.addView(emailButton);
 
-        aboutPrivacyTitle = label(I18n.t("privacyTitle"), 12, COLOR_MUTED, true);
-        aboutPrivacyTitle.setLetterSpacing(0.16f);
-        aboutPrivacyTitle.setPadding(0, dp(22), 0, dp(6));
-        col.addView(aboutPrivacyTitle);
-
-        aboutPrivacy = label(I18n.t("privacy"), 16, COLOR_MUTED, false);
-        aboutPrivacy.setLineSpacing(dp(4), 1f);
-        col.addView(aboutPrivacy);
+        scroll.addView(col, new ScrollView.LayoutParams(
+                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
+        return scroll;
     }
 
     private View bar() {
@@ -1598,7 +1460,10 @@ public class MainActivity extends Activity implements LocationListener {
                     StringBuilder body = new StringBuilder();
                     for (int n = 0; n < notes.length(); n++) {
                         if (n > 0) body.append("\n");
-                        body.append("• ").append(notes.optString(n));
+                        String key = "rel" + version.replace(".", "") + "_" + (n + 1);
+                        String line = I18n.t(key);
+                        if (line.equals(key)) line = notes.optString(n);
+                        body.append("• ").append(line);
                     }
                     TextView note = label(body.toString(), 15, COLOR_MUTED, false);
                     note.setLineSpacing(dp(3), 1f);
@@ -1766,6 +1631,144 @@ public class MainActivity extends Activity implements LocationListener {
         drawable.setCornerRadius(radius);
         drawable.setStroke(Math.max(1, dp(1)), stroke);
         return drawable;
+    }
+
+    /**
+     * Android 15 draws targetSdk 35+ apps behind the system bars. Read the insets
+     * and pad. Do not call WindowInsets.Builder.setInsets: including Type.ime()
+     * throws IllegalArgumentException during the first layout and kills startup.
+     */
+    private void keepInsideScreen(View root) {
+        if (Build.VERSION.SDK_INT < 35) return;
+        root.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+            @Override
+            public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+                try {
+                    int type = WindowInsets.Type.systemBars()
+                            | WindowInsets.Type.displayCutout()
+                            | WindowInsets.Type.ime();
+                    Insets bars = insets.getInsets(type);
+                    v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+                } catch (RuntimeException ignored) {
+                    /* show the screen unpadded rather than crash */
+                }
+                return insets;
+            }
+        });
+    }
+
+    private void syncGauge(int shown, String unit) {
+        long elapsed = overSince >= 0L ? SystemClock.elapsedRealtime() - overSince : 0L;
+        boolean over = tracking && (hasFix || testMode) && Pace.overLimit(speedKmh, limitKmh) && overSince >= 0L;
+        int seconds = 0;
+        if (over && elapsed >= 0L) seconds = (int) Math.min(60L, elapsed / 1000L);
+        FloatGauge.update(shown, unit, over, alarming, flashOn, seconds);
+    }
+
+    private void onFloat() {
+        if (!FloatGauge.canDraw(this)) {
+            floatAfterPermission = true;
+            Toast.makeText(this, I18n.t("floatNeed"), Toast.LENGTH_LONG).show();
+            startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName())));
+            return;
+        }
+        showFloatAndLeave();
+    }
+
+    private void showFloatAndLeave() {
+        if (tracking && !testMode) startKeepAlive();
+        int shown = Math.round(Pace.toDisplay(speedKmh, mph));
+        syncGauge(shown, mph ? "mph" : "km/h");
+        FloatGauge.show(getApplicationContext(), floatSize);
+        moveTaskToBack(true);
+    }
+
+    private void setFloatSize(String size) {
+        floatSize = FloatGauge.LARGE.equals(size) ? FloatGauge.LARGE : FloatGauge.SMALL;
+        prefs.edit().putString("float_size", floatSize).apply();
+        if (floatSmallButton != null) styleChoice(floatSmallButton, !FloatGauge.LARGE.equals(floatSize));
+        if (floatLargeButton != null) styleChoice(floatLargeButton, FloatGauge.LARGE.equals(floatSize));
+        if (FloatGauge.showing()) FloatGauge.show(getApplicationContext(), floatSize);
+    }
+
+    /** Picture and Pequeño / Grande, added onto the 1.5.0 settings page. */
+    private void addGaugeSettings(LinearLayout col) {
+        addGaugePhoto(col);
+
+        floatSizeLabel = label(I18n.t("floatSize"), 12, COLOR_MUTED, true);
+        floatSizeLabel.setLetterSpacing(0.12f);
+        floatSizeLabel.setPadding(0, dp(12), 0, dp(8));
+        col.addView(floatSizeLabel);
+
+        LinearLayout sizes = row();
+        floatSmallButton = chip(I18n.t("floatSmall"), !FloatGauge.LARGE.equals(floatSize));
+        floatLargeButton = chip(I18n.t("floatLarge"), FloatGauge.LARGE.equals(floatSize));
+        LinearLayout.LayoutParams sizeA = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        floatSmallButton.setLayoutParams(sizeA);
+        LinearLayout.LayoutParams sizeB = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        sizeB.leftMargin = dp(8);
+        floatLargeButton.setLayoutParams(sizeB);
+        floatSmallButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setFloatSize(FloatGauge.SMALL);
+            }
+        });
+        floatLargeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setFloatSize(FloatGauge.LARGE);
+            }
+        });
+        sizes.addView(floatSmallButton);
+        sizes.addView(floatLargeButton);
+        col.addView(sizes);
+
+        floatHintView = label(I18n.t("floatHint"), 14, COLOR_MUTED, false);
+        floatHintView.setPadding(0, dp(8), 0, dp(6));
+        floatHintView.setLineSpacing(dp(3), 1f);
+        col.addView(floatHintView);
+    }
+
+    /** Basic shows the gauge picture as a showcase, then the note about Pro. */
+    private void addProPitch(LinearLayout col) {
+        addGaugePhoto(col);
+
+        proTitleView = label(I18n.t("proTitle"), 22, COLOR_FG, true);
+        proTitleView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        proTitleView.setPadding(0, dp(8), 0, dp(8));
+        col.addView(proTitleView);
+
+        proBodyView = label(I18n.t("proBody"), 16, COLOR_MUTED, false);
+        proBodyView.setLineSpacing(dp(3), 1f);
+        col.addView(proBodyView);
+
+        proLinkView = label(I18n.t("proLinkLater"), 14, COLOR_SIGNAL, false);
+        proLinkView.setPadding(0, dp(8), 0, dp(6));
+        proLinkView.setLineSpacing(dp(3), 1f);
+        col.addView(proLinkView);
+    }
+
+    private void addGaugePhoto(LinearLayout col) {
+        try {
+            InputStream in = getAssets().open("nav-gauge.jpg");
+            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(in);
+            in.close();
+            if (bitmap != null) {
+                ImageView view = new ImageView(this);
+                view.setImageBitmap(bitmap);
+                view.setAdjustViewBounds(true);
+                view.setContentDescription(I18n.t("proPhoto"));
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.topMargin = dp(8);
+                view.setLayoutParams(lp);
+                col.addView(view);
+            }
+        } catch (Exception ignored) {
+            /* picture missing */
+        }
     }
 
     private int dp(int value) {

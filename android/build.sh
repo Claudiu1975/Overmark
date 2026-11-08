@@ -5,22 +5,7 @@ BT="$SDK/build-tools/34.0.0"
 PLATFORM="$SDK/platforms/android-36/android.jar"
 ROOT="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
 BUILD="$ROOT/build"
-EDITION="${1:-pro}"
-if [ "$EDITION" = "basic" ]; then
-  PRO_VALUE=false
-  APP_ID="com.overmark.basic"
-  LABEL="Overmark"
-  VERSION_CODE=17
-  VERSION_NAME=1.6.3
-else
-  EDITION="pro"
-  PRO_VALUE=true
-  APP_ID="com.overmark.app"
-  LABEL="Overmark Pro"
-  VERSION_CODE=19
-  VERSION_NAME=1.6.4
-fi
-APP_ID_OUT="$APP_ID"
+APP_ID="com.overmark.app"
 
 if [ ! -f "$PLATFORM" ] || [ ! -x "$BT/aapt2" ]; then
   echo "Android SDK missing at $SDK" >&2
@@ -70,52 +55,22 @@ if [ -f "$ROOT/../src/lib/overmark/releases.json" ]; then
 fi
 
 "$BT/aapt2" compile -o "$BUILD/flat" "$ROOT/res/drawable/ic_launcher.png"
-mkdir -p "$BUILD/res/values" "$BUILD/gen/com/overmark/app"
-printf '%s\n' '<?xml version="1.0" encoding="utf-8"?>' '<resources>' \
-  "    <string name=\"app_name\">$LABEL</string>" '</resources>' > "$BUILD/res/values/strings.xml"
-"$BT/aapt2" compile -o "$BUILD/flat" "$BUILD/res/values/strings.xml"
-cat > "$BUILD/gen/com/overmark/app/BuildConfig.java" << EOF
-package com.overmark.app;
-public final class BuildConfig {
-    public static final boolean DEBUG = false;
-    public static final String APPLICATION_ID = "$APP_ID";
-    public static final String BUILD_TYPE = "release";
-    public static final String FLAVOR = "$EDITION";
-    public static final int VERSION_CODE = $VERSION_CODE;
-    public static final String VERSION_NAME = "$VERSION_NAME";
-    public static final boolean PRO = $PRO_VALUE;
-}
-EOF
-
-MANIFEST="$BUILD/AndroidManifest.xml"
-if [ "$EDITION" = "basic" ]; then
-  sed -e '/SYSTEM_ALERT_WINDOW/d' \
-      -e "s/versionCode=\"14\"/versionCode=\"$VERSION_CODE\"/" \
-      -e "s/versionName=\"1.6.0\"/versionName=\"$VERSION_NAME\"/" \
-      "$ROOT/AndroidManifest.xml" > "$MANIFEST"
-else
-  sed -e "s/versionCode=\"14\"/versionCode=\"$VERSION_CODE\"/" \
-      -e "s/versionName=\"1.6.0\"/versionName=\"$VERSION_NAME\"/" \
-      "$ROOT/AndroidManifest.xml" > "$MANIFEST"
-fi
 
 "$BT/aapt2" link -o "$BUILD/unsigned.apk" \
   -I "$PLATFORM" \
-  --manifest "$MANIFEST" \
-  --rename-manifest-package "$APP_ID" \
-  --min-sdk-version 24 \
+  --manifest "$ROOT/AndroidManifest.xml" \
+  --min-sdk-version 26 \
   --target-sdk-version 36 \
   -A "$ROOT/assets" \
   "$BUILD/flat/"*.flat
 
 find "$ROOT/src" -name '*.java' > "$BUILD/sources.txt"
-echo "$BUILD/gen/com/overmark/app/BuildConfig.java" >> "$BUILD/sources.txt"
 javac -encoding UTF-8 -source 8 -target 8 \
   -classpath "$PLATFORM" \
   -d "$BUILD/classes" \
   @"$BUILD/sources.txt"
 
-"$BT/d8" --lib "$PLATFORM" --min-api 24 --output "$BUILD/dex" \
+"$BT/d8" --lib "$PLATFORM" --min-api 26 --output "$BUILD/dex" \
   $(find "$BUILD/classes" -name '*.class')
 
 cp "$BUILD/unsigned.apk" "$BUILD/withdex.apk"
@@ -134,9 +89,9 @@ mkdir -p "$ROOT/../public" "$ROOT/../artifacts"
 "$BT/apksigner" sign \
   --ks "$KS" --ks-key-alias androiddebugkey \
   --ks-pass pass:android --key-pass pass:android \
-  --out "$ROOT/../public/overmark-$EDITION-$VERSION_NAME.apk" \
+  --out "$ROOT/../public/overmark-1.5.0.apk" \
   "$BUILD/aligned.apk"
-cp "$ROOT/../public/overmark-$EDITION-$VERSION_NAME.apk" "$ROOT/../artifacts/Overmark-$EDITION-$VERSION_NAME.apk" 2>/dev/null || true
-"$BT/apksigner" verify --verbose "$ROOT/../public/overmark-$EDITION-$VERSION_NAME.apk"
-"$BT/aapt" dump badging "$ROOT/../public/overmark-$EDITION-$VERSION_NAME.apk" | head -n 12
-ls -lh "$ROOT/../public/overmark-$EDITION-$VERSION_NAME.apk"
+cp "$ROOT/../public/overmark-1.5.0.apk" "$ROOT/../artifacts/Overmark-1.5.0.apk" 2>/dev/null || true
+"$BT/apksigner" verify --verbose "$ROOT/../public/overmark-1.5.0.apk"
+"$BT/aapt" dump badging "$ROOT/../public/overmark-1.5.0.apk" | head -n 20
+ls -lh "$ROOT/../public/overmark-1.5.0.apk"
