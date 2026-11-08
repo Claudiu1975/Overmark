@@ -101,10 +101,6 @@ cd android
 | --- | --- |
 | 1.6.2 Basic | [public/overmark-basic-1.6.2.apk](public/overmark-basic-1.6.2.apk) |
 | 1.6.0 Basic | [public/overmark-basic-1.6.0.apk](public/overmark-basic-1.6.0.apk) |
-| 1.5.5 | [public/overmark-1.5.5.apk](public/overmark-1.5.5.apk) |
-| 1.5.4 | [public/overmark-1.5.4.apk](public/overmark-1.5.4.apk) |
-| 1.5.3 | [public/overmark-1.5.3.apk](public/overmark-1.5.3.apk) |
-| 1.5.2 | [public/overmark-1.5.2.apk](public/overmark-1.5.2.apk) |
 | 1.5.0 | [public/overmark-1.5.0.apk](public/overmark-1.5.0.apk) |
 | overmark-android-7 | [public/overmark-android-7.apk](public/overmark-android-7.apk) |
 | 1.4.0 | [public/overmark-1.4.0.apk](public/overmark-1.4.0.apk) |
