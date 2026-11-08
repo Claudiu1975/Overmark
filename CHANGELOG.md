@@ -2,6 +2,12 @@
 
 Each version stays available. A newer build does not remove older packages.
 
+## 1.6.2 Pro
+
+- Same screen flow as Basic. Language is on the main screen. About holds the description, the navigation photo, the gauge size, and the legal text. Settings is gone, so language and About return to the main screen.
+
+Package: [public/overmark-pro-1.6.2.apk](public/overmark-pro-1.6.2.apk)
+
 ## 1.6.2 Basic
 
 - Basic only. The empty Settings page is gone. Choosing a language, or leaving About, returns to the main screen.

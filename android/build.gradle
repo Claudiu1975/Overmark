@@ -41,6 +41,8 @@ android {
         pro {
             dimension "edition"
             applicationId "com.overmark.app"
+            versionCode 17
+            versionName "1.6.2"
             buildConfigField "boolean", "PRO", "true"
         }
     }

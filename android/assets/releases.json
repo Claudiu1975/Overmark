@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.6.2 Pro",
+    "file": "overmark-pro-1.6.2.apk",
+    "notes": [
+      "Same flow as Basic. Language is on the main screen. About holds the description, the navigation photo, the gauge size, and the legal text."
+    ]
+  },
+  {
     "version": "1.6.2",
     "file": "overmark-basic-1.6.2.apk",
     "notes": [

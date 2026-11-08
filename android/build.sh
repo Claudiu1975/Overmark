@@ -17,8 +17,8 @@ else
   PRO_VALUE=true
   APP_ID="com.overmark.app"
   LABEL="Overmark Pro"
-  VERSION_CODE=14
-  VERSION_NAME=1.6.0
+  VERSION_CODE=17
+  VERSION_NAME=1.6.2
 fi
 APP_ID_OUT="$APP_ID"
 
@@ -87,13 +87,16 @@ public final class BuildConfig {
 }
 EOF
 
-MANIFEST="$ROOT/AndroidManifest.xml"
+MANIFEST="$BUILD/AndroidManifest.xml"
 if [ "$EDITION" = "basic" ]; then
   sed -e '/SYSTEM_ALERT_WINDOW/d' \
-      -e 's/versionCode="14"/versionCode="16"/' \
-      -e 's/versionName="1.6.0"/versionName="1.6.2"/' \
-      "$ROOT/AndroidManifest.xml" > "$BUILD/AndroidManifest.xml"
-  MANIFEST="$BUILD/AndroidManifest.xml"
+      -e "s/versionCode=\"14\"/versionCode=\"$VERSION_CODE\"/" \
+      -e "s/versionName=\"1.6.0\"/versionName=\"$VERSION_NAME\"/" \
+      "$ROOT/AndroidManifest.xml" > "$MANIFEST"
+else
+  sed -e "s/versionCode=\"14\"/versionCode=\"$VERSION_CODE\"/" \
+      -e "s/versionName=\"1.6.0\"/versionName=\"$VERSION_NAME\"/" \
+      "$ROOT/AndroidManifest.xml" > "$MANIFEST"
 fi
 
 "$BT/aapt2" link -o "$BUILD/unsigned.apk" \

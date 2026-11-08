@@ -8,6 +8,10 @@ If the screen is off and speed is over the limit, Overmark posts a notification.
 
 Disclaimer and About are separate pages.
 
+## What's new in 1.6.2 Pro
+
+Same as Basic. Language is on the main screen. About holds the description, the navigation photo, the gauge size, and the legal text. There is no Settings page in between.
+
 ## What's new in 1.6.2 Basic
 
 Basic only. The empty Settings page is removed. Language and About now return to the main screen.
@@ -82,6 +86,7 @@ cd android
 
 | Version | Package |
 | --- | --- |
+| 1.6.2 Pro | [public/overmark-pro-1.6.2.apk](public/overmark-pro-1.6.2.apk) |
 | 1.6.2 Basic | [public/overmark-basic-1.6.2.apk](public/overmark-basic-1.6.2.apk) |
 | 1.6.0 Pro | [public/overmark-pro-1.6.0.apk](public/overmark-pro-1.6.0.apk) |
 | 1.6.0 Basic | [public/overmark-basic-1.6.0.apk](public/overmark-basic-1.6.0.apk) |
@@ -107,6 +112,6 @@ npm install
 npm run dev
 ```
 
-The newest Basic package is [public/overmark-basic-1.6.2.apk](public/overmark-basic-1.6.2.apk). Pro is still [public/overmark-pro-1.6.0.apk](public/overmark-pro-1.6.0.apk). It needs Android 7 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission. The floating gauge needs permission to display over other apps.
+The newest packages are [public/overmark-basic-1.6.2.apk](public/overmark-basic-1.6.2.apk) and [public/overmark-pro-1.6.2.apk](public/overmark-pro-1.6.2.apk). It needs Android 7 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission. The floating gauge needs permission to display over other apps.
 
 To rebuild the APK, install Android SDK platform 34 and build-tools 34.0.0, then run `android/build.sh`. The debug keystore is created on the first build. The script writes the new package and leaves every older package in place.

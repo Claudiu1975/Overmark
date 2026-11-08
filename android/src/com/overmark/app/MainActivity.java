@@ -730,9 +730,9 @@ public class MainActivity extends Activity implements LocationListener {
         showPane(show ? langPane : underPage());
     }
 
-    /** Pro returns to Settings. Basic has no Settings page, so it returns to the main screen. */
+    /** Language and About always return to the main screen. */
     private View underPage() {
-        return BuildConfig.PRO ? settingsPane : null;
+        return null;
     }
 
     private void showSettings(boolean show) {
@@ -1005,13 +1005,9 @@ public class MainActivity extends Activity implements LocationListener {
         if (backButton != null) backButton.setText(I18n.t("back"));
         if (disclaimerBack != null) disclaimerBack.setText(I18n.t("back"));
         if (disclaimerAbout != null) disclaimerAbout.setText(I18n.t("about"));
-        if (aboutVersion != null) {
-            aboutVersion.setText(BuildConfig.PRO ? I18n.t("version") + " " + versionName : I18n.t("about"));
-        }
+        if (aboutVersion != null) aboutVersion.setText(I18n.t("about"));
         if (contactKicker != null) contactKicker.setText(I18n.t("contact"));
-        if (settingsButton != null) {
-            settingsButton.setText(BuildConfig.PRO ? I18n.t("settings") : I18n.t("about"));
-        }
+        if (settingsButton != null) settingsButton.setText(I18n.t("about"));
         if (settingsBack != null) settingsBack.setText(I18n.t("back"));
         if (settingsTitle != null) settingsTitle.setText(I18n.t("settings"));
         if (aboutStory != null) aboutStory.setText(I18n.t("appStory"));
@@ -1082,19 +1078,17 @@ public class MainActivity extends Activity implements LocationListener {
         title.setLetterSpacing(0.18f);
         title.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
         head.addView(title);
-        if (!BuildConfig.PRO) {
-            Button langIcon = chip("Aa", false);
-            langIcon.setContentDescription(I18n.t("language"));
-            langIcon.setLayoutParams(new LinearLayout.LayoutParams(dp(44), dp(44)));
-            langIcon.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-            langIcon.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showLang(true);
-                }
-            });
-            head.addView(langIcon);
-        }
+        Button langIcon = chip("Aa", false);
+        langIcon.setContentDescription(I18n.t("language"));
+        langIcon.setLayoutParams(new LinearLayout.LayoutParams(dp(44), dp(44)));
+        langIcon.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        langIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showLang(true);
+            }
+        });
+        head.addView(langIcon);
         col.addView(head);
 
         statusView = label("STANDBY", 12, COLOR_MUTED, true);
@@ -1321,7 +1315,7 @@ public class MainActivity extends Activity implements LocationListener {
         hintView.setLineSpacing(dp(3), 1f);
         col.addView(hintView);
 
-        settingsButton = chip(BuildConfig.PRO ? I18n.t("settings") : I18n.t("about"), false);
+        settingsButton = chip(I18n.t("about"), false);
         LinearLayout.LayoutParams settingsLp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
         settingsLp.topMargin = dp(22);
@@ -1329,8 +1323,7 @@ public class MainActivity extends Activity implements LocationListener {
         settingsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (BuildConfig.PRO) showSettings(true);
-                else showAbout(true);
+                showAbout(true);
             }
         });
         col.addView(settingsButton);
@@ -1420,74 +1413,7 @@ public class MainActivity extends Activity implements LocationListener {
             }
         });
         col.addView(backButton);
-
-        if (!BuildConfig.PRO) {
-            addBasicAbout(col);
-            scroll.addView(col, new ScrollView.LayoutParams(
-                    ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
-            return scroll;
-        }
-
-        TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
-        kicker.setLetterSpacing(0.18f);
-        kicker.setPadding(0, dp(28), 0, dp(8));
-        col.addView(kicker);
-        col.addView(bar());
-
-        aboutVersion = label(I18n.t("version") + " " + versionName, 42, COLOR_FG, true);
-        aboutVersion.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
-        col.addView(aboutVersion);
-
-        aboutStory = label(I18n.t("appStory"), 16, COLOR_MUTED, false);
-        aboutStory.setPadding(0, dp(16), 0, 0);
-        aboutStory.setLineSpacing(dp(4), 1f);
-        col.addView(aboutStory);
-
-        aboutHow = label(I18n.t("how"), 16, COLOR_MUTED, false);
-        aboutHow.setPadding(0, dp(16), 0, 0);
-        aboutHow.setLineSpacing(dp(4), 1f);
-        col.addView(aboutHow);
-
-        aboutOpen = label(I18n.t("openSource"), 16, COLOR_FG, false);
-        aboutOpen.setPadding(0, dp(16), 0, dp(10));
-        aboutOpen.setLineSpacing(dp(4), 1f);
-        col.addView(aboutOpen);
-
-        sourceButton = chip(I18n.t("sourceCode"), false);
-        LinearLayout.LayoutParams sourceLp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
-        sourceButton.setLayoutParams(sourceLp);
-        sourceButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openUrl(REPO);
-            }
-        });
-        col.addView(sourceButton);
-
-        contactKicker = label(I18n.t("contact"), 12, COLOR_MUTED, true);
-        contactKicker.setLetterSpacing(0.16f);
-        contactKicker.setPadding(0, dp(56), 0, dp(8));
-        col.addView(contactKicker);
-        col.addView(bar());
-
-        contactBrand = label(BRAND, 36, COLOR_FG, true);
-        contactBrand.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
-        col.addView(contactBrand);
-
-        emailButton = chip(CONTACT_EMAIL, true);
-        LinearLayout.LayoutParams emailLp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(52));
-        emailLp.topMargin = dp(14);
-        emailButton.setLayoutParams(emailLp);
-        emailButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openUrl("mailto:" + CONTACT_EMAIL);
-            }
-        });
-        col.addView(emailButton);
-
+        addBasicAbout(col);
         scroll.addView(col, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
         return scroll;
@@ -1527,6 +1453,8 @@ public class MainActivity extends Activity implements LocationListener {
         } catch (Exception ignored) {
             /* screenshot missing */
         }
+
+        if (BuildConfig.PRO) addFloatSize(col);
 
         aboutDisclaimerTitle = label(I18n.t("disclaimerTitle"), 28, COLOR_FG, true);
         aboutDisclaimerTitle.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
