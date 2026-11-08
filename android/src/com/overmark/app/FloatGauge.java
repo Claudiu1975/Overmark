@@ -114,7 +114,7 @@ public final class FloatGauge {
         center.gravity = Gravity.CENTER;
         frame.addView(column, center);
         root = frame;
-        root.setContentDescription("Overmark");
+        root.setContentDescription("Overmark Pro");
 
         int type = Build.VERSION.SDK_INT >= 26
                 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY

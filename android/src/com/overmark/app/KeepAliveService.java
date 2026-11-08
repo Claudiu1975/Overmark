@@ -32,12 +32,12 @@ public class KeepAliveService extends Service {
             NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             if (Build.VERSION.SDK_INT >= 26 && manager.getNotificationChannel(CHANNEL) == null) {
                 NotificationChannel channel = new NotificationChannel(
-                        CHANNEL, "Overmark", NotificationManager.IMPORTANCE_LOW);
+                        CHANNEL, productName(), NotificationManager.IMPORTANCE_LOW);
                 channel.setDescription(I18n.t("privacyTitle"));
                 manager.createNotificationChannel(channel);
             }
             Notification note = new Notification.Builder(this, CHANNEL)
-                    .setContentTitle("Overmark")
+                    .setContentTitle(productName())
                     .setContentText(I18n.t("minimized"))
                     .setSmallIcon(android.R.drawable.ic_menu_mylocation)
                     .setOngoing(true)
@@ -51,6 +51,11 @@ public class KeepAliveService extends Service {
             stopSelf();
         }
         return START_NOT_STICKY;
+    }
+
+    /** Pro shows its product name. Basic keeps the name it already shows. */
+    private String productName() {
+        return BuildConfig.PRO ? "Overmark Pro" : "Overmark";
     }
 
     private boolean hasLocationPermission() {

@@ -616,7 +616,7 @@ public class MainActivity extends Activity implements LocationListener {
         if (manager == null) return;
         if (Build.VERSION.SDK_INT >= 26 && manager.getNotificationChannel(ALERT_CHANNEL) == null) {
             NotificationChannel channel = new NotificationChannel(
-                    ALERT_CHANNEL, "Overmark", NotificationManager.IMPORTANCE_HIGH);
+                    ALERT_CHANNEL, productName(), NotificationManager.IMPORTANCE_HIGH);
             channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
             channel.setDescription(I18n.t("alertOver"));
             manager.createNotificationChannel(channel);
@@ -624,7 +624,7 @@ public class MainActivity extends Activity implements LocationListener {
         int shown = Math.round(Pace.toDisplay(speedKmh, mph));
         String unit = mph ? "mph" : "km/h";
         Notification note = new Notification.Builder(this, ALERT_CHANNEL)
-                .setContentTitle("Overmark")
+                .setContentTitle(productName())
                 .setContentText(I18n.t("alertOver") + " · " + shown + " " + unit)
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
                 .setCategory(Notification.CATEGORY_ALARM)
@@ -943,7 +943,7 @@ public class MainActivity extends Activity implements LocationListener {
         LinearLayout col = column();
         col.setPadding(dp(20), dp(18), dp(20), dp(24));
 
-        TextView title = label("OVERMARK", 14, COLOR_FG, true);
+        TextView title = label(productMark(), 14, COLOR_FG, true);
         title.setLetterSpacing(0.18f);
         col.addView(title);
 
@@ -1197,7 +1197,7 @@ public class MainActivity extends Activity implements LocationListener {
         });
         col.addView(settingsBack);
 
-        TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
+        TextView kicker = label(productMark(), 12, COLOR_SIGNAL, true);
         kicker.setLetterSpacing(0.18f);
         kicker.setPadding(0, dp(28), 0, dp(8));
         col.addView(kicker);
@@ -1267,7 +1267,7 @@ public class MainActivity extends Activity implements LocationListener {
         });
         col.addView(privacyBack);
 
-        TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
+        TextView kicker = label(productMark(), 12, COLOR_SIGNAL, true);
         kicker.setLetterSpacing(0.18f);
         kicker.setPadding(0, dp(28), 0, dp(8));
         col.addView(kicker);
@@ -1303,7 +1303,7 @@ public class MainActivity extends Activity implements LocationListener {
         });
         col.addView(backButton);
 
-        TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
+        TextView kicker = label(productMark(), 12, COLOR_SIGNAL, true);
         kicker.setLetterSpacing(0.18f);
         kicker.setPadding(0, dp(28), 0, dp(8));
         col.addView(kicker);
@@ -1393,7 +1393,7 @@ public class MainActivity extends Activity implements LocationListener {
         });
         col.addView(disclaimerBack);
 
-        TextView kicker = label("OVERMARK", 12, COLOR_SIGNAL, true);
+        TextView kicker = label(productMark(), 12, COLOR_SIGNAL, true);
         kicker.setLetterSpacing(0.18f);
         kicker.setPadding(0, dp(28), 0, dp(6));
         col.addView(kicker);
@@ -1769,6 +1769,15 @@ public class MainActivity extends Activity implements LocationListener {
         } catch (Exception ignored) {
             /* picture missing */
         }
+    }
+
+    /** Launcher name is Overmark Pro. Basic keeps the Overmark label it already shows. */
+    private String productName() {
+        return BuildConfig.PRO ? "Overmark Pro" : "Overmark";
+    }
+
+    private String productMark() {
+        return BuildConfig.PRO ? "OVERMARK PRO" : "OVERMARK";
     }
 
     private int dp(int value) {
