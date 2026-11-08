@@ -36,6 +36,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -254,6 +255,19 @@ public class MainActivity extends Activity implements LocationListener {
 
         getWindow().setStatusBarColor(COLOR_BG);
         getWindow().setNavigationBarColor(COLOR_BG);
+        if (Build.VERSION.SDK_INT >= 29) {
+            getWindow().setStatusBarContrastEnforced(false);
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
+        if (Build.VERSION.SDK_INT >= 30) {
+            WindowInsetsController bars = getWindow().getInsetsController();
+            if (bars != null) {
+                bars.setSystemBarsAppearance(0,
+                        WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                                | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+            }
+        }
+        if (Build.VERSION.SDK_INT >= 35) getWindow().setDecorFitsSystemWindows(false);
 
         if (savedInstanceState != null) {
             tracking = savedInstanceState.getBoolean("tracking");

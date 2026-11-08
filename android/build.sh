@@ -10,15 +10,15 @@ if [ "$EDITION" = "basic" ]; then
   PRO_VALUE=false
   APP_ID="com.overmark.basic"
   LABEL="Overmark"
-  VERSION_CODE=17
-  VERSION_NAME=1.6.3
+  VERSION_CODE=18
+  VERSION_NAME=1.6.4
 else
   EDITION="pro"
   PRO_VALUE=true
   APP_ID="com.overmark.app"
   LABEL="Overmark Pro"
-  VERSION_CODE=19
-  VERSION_NAME=1.6.4
+  VERSION_CODE=20
+  VERSION_NAME=1.6.5
 fi
 APP_ID_OUT="$APP_ID"
 
