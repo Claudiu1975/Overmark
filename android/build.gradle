@@ -10,8 +10,8 @@ android {
         applicationId 'com.overmark.app'
         minSdk 26
         targetSdk 36
-        versionCode 22
-        versionName '1.7.1'
+        versionCode 23
+        versionName '1.7.2'
     }
 
     compileOptions {
@@ -35,8 +35,8 @@ android {
         pro {
             dimension "edition"
             applicationId "com.overmark.app"
-            versionCode 22
-            versionName "1.7.1"
+            versionCode 23
+            versionName "1.7.2"
             buildConfigField "boolean", "PRO", "true"
         }
     }
