@@ -113,6 +113,13 @@ public class MainActivity extends Activity implements LocationListener {
     private Button aboutButton;
     private Button disclaimerButton;
     private Button privacyButton;
+    private TextView privacyHeading;
+    private TextView privacyBody;
+    private TextView floatSizeLabel;
+    private TextView floatHintView;
+    private TextView proTitleView;
+    private TextView proBodyView;
+    private TextView proLinkView;
     private Button langButton;
     private Button minusButton;
     private Button plusButton;
@@ -840,14 +847,21 @@ public class MainActivity extends Activity implements LocationListener {
     private void relabel() {
         if (aboutButton != null) aboutButton.setText(I18n.t("about"));
         if (disclaimerButton != null) disclaimerButton.setText(I18n.t("disclaimerTitle"));
-        if (privacyButton != null) privacyButton.setText("Privacy");
+        if (privacyButton != null) privacyButton.setText(I18n.t("privacyPage"));
+        if (privacyHeading != null) privacyHeading.setText(I18n.t("privacyPage"));
+        if (privacyBody != null) privacyBody.setText(I18n.t("privacy"));
         if (privacyBack != null) privacyBack.setText(I18n.t("back"));
         if (langButton != null) langButton.setText(I18n.t("language"));
-        if (gpsButton != null) gpsButton.setText("GPS");
+        if (gpsButton != null) gpsButton.setText(I18n.t("gps"));
         if (testButton != null) testButton.setText(I18n.t("test"));
         if (exitButton != null) exitButton.setText(I18n.t("exit"));
         if (minimizeButton != null) minimizeButton.setText(I18n.t("minimize"));
         if (floatButton != null) floatButton.setText(I18n.t("floatGauge"));
+        if (floatSizeLabel != null) floatSizeLabel.setText(I18n.t("floatSize"));
+        if (floatHintView != null) floatHintView.setText(I18n.t("floatHint"));
+        if (proTitleView != null) proTitleView.setText(I18n.t("proTitle"));
+        if (proBodyView != null) proBodyView.setText(I18n.t("proBody"));
+        if (proLinkView != null) proLinkView.setText(I18n.t("proLinkLater"));
         if (floatSmallButton != null) {
             floatSmallButton.setText(I18n.t("floatSmall"));
             styleChoice(floatSmallButton, !FloatGauge.LARGE.equals(floatSize));
@@ -1033,8 +1047,8 @@ public class MainActivity extends Activity implements LocationListener {
 
         LinearLayout modes = row();
         modes.setPadding(0, dp(12), 0, 0);
-        gpsButton = chip("GPS", true);
-        testButton = chip("Test", false);
+        gpsButton = chip(I18n.t("gps"), true);
+        testButton = chip(I18n.t("test"), false);
         LinearLayout.LayoutParams half = new LinearLayout.LayoutParams(0, dp(48), 1f);
         gpsButton.setLayoutParams(half);
         LinearLayout.LayoutParams half2 = new LinearLayout.LayoutParams(0, dp(48), 1f);
@@ -1126,18 +1140,20 @@ public class MainActivity extends Activity implements LocationListener {
             }
         });
         power.addView(minimizeButton);
-        floatButton = chip(I18n.t("floatGauge"), false);
-        LinearLayout.LayoutParams halfF = new LinearLayout.LayoutParams(0, dp(48), 1f);
-        halfF.leftMargin = dp(8);
-        floatButton.setLayoutParams(halfF);
-        floatButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        floatButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onFloat();
-            }
-        });
-        power.addView(floatButton);
+        if (BuildConfig.PRO) {
+            floatButton = chip(I18n.t("floatGauge"), false);
+            LinearLayout.LayoutParams halfF = new LinearLayout.LayoutParams(0, dp(48), 1f);
+            halfF.leftMargin = dp(8);
+            floatButton.setLayoutParams(halfF);
+            floatButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+            floatButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onFloat();
+                }
+            });
+            power.addView(floatButton);
+        }
         power.addView(exitButton);
         col.addView(power);
 
@@ -1191,7 +1207,8 @@ public class MainActivity extends Activity implements LocationListener {
         settingsTitle.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
         settingsTitle.setPadding(0, 0, 0, dp(10));
         col.addView(settingsTitle);
-        addGaugeSettings(col);
+        if (BuildConfig.PRO) addGaugeSettings(col);
+        else addProPitch(col);
 
         langButton = chip(I18n.t("language"), false);
         langButton.setOnClickListener(new View.OnClickListener() {
@@ -1214,7 +1231,7 @@ public class MainActivity extends Activity implements LocationListener {
                 showDisclaimer(true);
             }
         });
-        privacyButton = chip("Privacy", false);
+        privacyButton = chip(I18n.t("privacyPage"), false);
         privacyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -1256,17 +1273,12 @@ public class MainActivity extends Activity implements LocationListener {
         col.addView(kicker);
         col.addView(bar());
 
-        TextView title = label("Privacy", 36, COLOR_FG, true);
-        title.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
-        col.addView(title);
+        privacyHeading = label(I18n.t("privacyPage"), 36, COLOR_FG, true);
+        privacyHeading.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        col.addView(privacyHeading);
 
-        String body = "Privacy";
-        try {
-            body = readAsset("privacy.txt").trim();
-        } catch (Exception ignored) {
-            body = I18n.t("privacy");
-        }
-        TextView text = label(body, 16, COLOR_FG, false);
+        privacyBody = label(I18n.t("privacy"), 16, COLOR_FG, false);
+        TextView text = privacyBody;
         text.setPadding(0, dp(16), 0, 0);
         text.setLineSpacing(dp(4), 1f);
         col.addView(text);
@@ -1448,7 +1460,10 @@ public class MainActivity extends Activity implements LocationListener {
                     StringBuilder body = new StringBuilder();
                     for (int n = 0; n < notes.length(); n++) {
                         if (n > 0) body.append("\n");
-                        body.append("• ").append(notes.optString(n));
+                        String key = "rel" + version.replace(".", "") + "_" + (n + 1);
+                        String line = I18n.t(key);
+                        if (line.equals(key)) line = notes.optString(n);
+                        body.append("• ").append(line);
                     }
                     TextView note = label(body.toString(), 15, COLOR_MUTED, false);
                     note.setLineSpacing(dp(3), 1f);
@@ -1698,10 +1713,10 @@ public class MainActivity extends Activity implements LocationListener {
             /* picture missing */
         }
 
-        TextView sizeLabel = label(I18n.t("floatSize"), 12, COLOR_MUTED, true);
-        sizeLabel.setLetterSpacing(0.12f);
-        sizeLabel.setPadding(0, dp(12), 0, dp(8));
-        col.addView(sizeLabel);
+        floatSizeLabel = label(I18n.t("floatSize"), 12, COLOR_MUTED, true);
+        floatSizeLabel.setLetterSpacing(0.12f);
+        floatSizeLabel.setPadding(0, dp(12), 0, dp(8));
+        col.addView(floatSizeLabel);
 
         LinearLayout sizes = row();
         floatSmallButton = chip(I18n.t("floatSmall"), !FloatGauge.LARGE.equals(floatSize));
@@ -1727,10 +1742,27 @@ public class MainActivity extends Activity implements LocationListener {
         sizes.addView(floatLargeButton);
         col.addView(sizes);
 
-        TextView hint = label(I18n.t("floatHint"), 14, COLOR_MUTED, false);
-        hint.setPadding(0, dp(8), 0, dp(6));
-        hint.setLineSpacing(dp(3), 1f);
-        col.addView(hint);
+        floatHintView = label(I18n.t("floatHint"), 14, COLOR_MUTED, false);
+        floatHintView.setPadding(0, dp(8), 0, dp(6));
+        floatHintView.setLineSpacing(dp(3), 1f);
+        col.addView(floatHintView);
+    }
+
+    /** Basic has no gauge. Point to Overmark Pro instead. */
+    private void addProPitch(LinearLayout col) {
+        proTitleView = label(I18n.t("proTitle"), 22, COLOR_FG, true);
+        proTitleView.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        proTitleView.setPadding(0, dp(8), 0, dp(8));
+        col.addView(proTitleView);
+
+        proBodyView = label(I18n.t("proBody"), 16, COLOR_MUTED, false);
+        proBodyView.setLineSpacing(dp(3), 1f);
+        col.addView(proBodyView);
+
+        proLinkView = label(I18n.t("proLinkLater"), 14, COLOR_SIGNAL, false);
+        proLinkView.setPadding(0, dp(8), 0, dp(6));
+        proLinkView.setLineSpacing(dp(3), 1f);
+        col.addView(proLinkView);
     }
 
     private int dp(int value) {

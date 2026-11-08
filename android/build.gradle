@@ -10,13 +10,35 @@ android {
         applicationId 'com.overmark.app'
         minSdk 26
         targetSdk 36
-        versionCode 21
-        versionName '1.7.0'
+        versionCode 22
+        versionName '1.7.1'
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    flavorDimensions += "edition"
+    productFlavors {
+        basic {
+            dimension "edition"
+            applicationId "com.overmark.basic"
+            versionCode 19
+            versionName "1.7.0"
+            buildConfigField "boolean", "PRO", "false"
+        }
+        pro {
+            dimension "edition"
+            applicationId "com.overmark.app"
+            versionCode 22
+            versionName "1.7.1"
+            buildConfigField "boolean", "PRO", "true"
+        }
     }
 
     lint {
