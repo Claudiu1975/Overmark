@@ -10,7 +10,7 @@ Disclaimer and About are separate pages.
 
 ## Download
 
-The newest Basic package is [overmark-basic-1.6.3.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.6.3/overmark-basic-1.6.3.apk). The release page is [v1.6.3](https://github.com/Claudiu1975/Overmark/releases/tag/v1.6.3).
+The newest Basic package is [overmark-basic-1.7.1.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.7.1/overmark-basic-1.7.1.apk). The release page is [v1.7.1](https://github.com/Claudiu1975/Overmark/releases/tag/v1.7.1).
 
 Pro is not published as a download. Compile it yourself from this source, or search the Google Play Store for Overmark Pro.
 
@@ -26,6 +26,12 @@ The compiled Pro app is not published here. Compile it yourself from this source
 cd android
 ./gradlew assembleProRelease
 ```
+
+## What's new in 1.7.1
+
+Rebuilt on the stable 1.5.0 base, so the app starts again. Test does not crash without location permission. On Android 15 the screen stays clear of the status bar and the navigation buttons. Translations are fixed in every language. Settings shows a preview of the Overmark Pro floating gauge.
+
+The package is [overmark-basic-1.7.1.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.7.1/overmark-basic-1.7.1.apk) on the [v1.7.1 release](https://github.com/Claudiu1975/Overmark/releases/tag/v1.7.1).
 
 ## What's new in 1.6.4 Pro
 
@@ -113,6 +119,7 @@ cd android
 
 | Version | Package |
 | --- | --- |
+| 1.7.1 Basic | [overmark-basic-1.7.1.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.7.1/overmark-basic-1.7.1.apk) |
 | 1.6.3 Basic | [overmark-basic-1.6.3.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.6.3/overmark-basic-1.6.3.apk) |
 | 1.6.2 Basic | [public/overmark-basic-1.6.2.apk](public/overmark-basic-1.6.2.apk) |
 | 1.6.0 Basic | [public/overmark-basic-1.6.0.apk](public/overmark-basic-1.6.0.apk) |
@@ -134,6 +141,6 @@ npm install
 npm run dev
 ```
 
-The newest Basic package is [overmark-basic-1.6.3.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.6.3/overmark-basic-1.6.3.apk) ([v1.6.3](https://github.com/Claudiu1975/Overmark/releases/tag/v1.6.3)). Pro is not published as a download. Compile it yourself, or search the Google Play Store for Overmark Pro. It needs Android 7 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission. The floating gauge needs permission to display over other apps.
+The newest Basic package is [overmark-basic-1.7.1.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.7.1/overmark-basic-1.7.1.apk) ([v1.7.1](https://github.com/Claudiu1975/Overmark/releases/tag/v1.7.1)). Pro is not published as a download. Compile it yourself, or search the Google Play Store for Overmark Pro. It needs Android 7 or newer. Allow the browser to install it. Beeps use media volume. The alarm uses the alarm stream. Lock-screen alerts use the notification permission. The floating gauge needs permission to display over other apps.
 
 To rebuild the APK, install Android SDK platform 34 and build-tools 34.0.0, then run `android/build.sh`. The debug keystore is created on the first build. The script writes the new package and leaves every older package in place.
