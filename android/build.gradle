@@ -34,15 +34,15 @@ android {
         basic {
             dimension "edition"
             applicationId "com.overmark.basic"
-            versionCode 16
-            versionName "1.6.2"
+            versionCode 17
+            versionName "1.6.3"
             buildConfigField "boolean", "PRO", "false"
         }
         pro {
             dimension "edition"
             applicationId "com.overmark.app"
-            versionCode 18
-            versionName "1.6.3"
+            versionCode 19
+            versionName "1.6.4"
             buildConfigField "boolean", "PRO", "true"
         }
     }

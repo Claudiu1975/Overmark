@@ -21,6 +21,10 @@ cd android
 ./gradlew assembleProRelease
 ```
 
+## What's new in 1.6.4 Pro
+
+Test runs without location permission. Arming a simulated speed no longer crashes when location is missing, denied, or revoked, and the same is true if notifications are blocked. Basic 1.6.3 has the same fix.
+
 ## What's new in 1.6.2 Pro
 
 Same as Basic. Language is on the main screen. About holds the description, the navigation photo, the gauge size, and the legal text. There is no Settings page in between.

@@ -1,5 +1,21 @@
 [
   {
+    "version": "1.6.4 Pro",
+    "file": "",
+    "notes": [
+      "Test runs without location permission. Arming a simulated speed no longer crashes when location is missing, denied, or revoked.",
+      "Losing location mid-session returns GPS tracking to standby. A denied notification permission does not crash the app.",
+      "Compiled Pro is not published. Compile it yourself, or search the Google Play Store for Overmark Pro."
+    ]
+  },
+  {
+    "version": "1.6.3",
+    "file": "",
+    "notes": [
+      "Basic only. Same crash fix as Pro 1.6.4: Test works without location permission."
+    ]
+  },
+  {
     "version": "1.6.2 Pro",
     "file": "",
     "notes": [

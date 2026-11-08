@@ -2,6 +2,19 @@
 
 Each version stays available. A newer build does not remove older packages.
 
+## 1.6.4 Pro
+
+- Test no longer crashes when location permission is missing, denied, or revoked. The simulated speed still runs on screen. Staying alive after minimize still needs location permission, because that notice is a location foreground service.
+- Arming GPS with location denied, or losing it mid-session, returns to standby instead of crashing. A denied notification permission no longer takes the process down with it.
+
+Compiled Pro is not published. Compile it from this source, or search the Google Play Store for Overmark Pro.
+
+## 1.6.3 Basic
+
+- Same fix as Pro 1.6.4. Test runs without location permission and does not crash if that permission, or notifications, is denied or revoked.
+
+The previous Basic package remains [public/overmark-basic-1.6.2.apk](public/overmark-basic-1.6.2.apk).
+
 ## 1.6.3 Pro
 
 - The gauge size buttons on About work again. The choice is kept, and a gauge that is already showing changes size immediately.
