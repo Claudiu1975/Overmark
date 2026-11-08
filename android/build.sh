@@ -17,8 +17,8 @@ else
   PRO_VALUE=true
   APP_ID="com.overmark.app"
   LABEL="Overmark Pro"
-  VERSION_CODE=17
-  VERSION_NAME=1.6.2
+  VERSION_CODE=18
+  VERSION_NAME=1.6.3
 fi
 APP_ID_OUT="$APP_ID"
 

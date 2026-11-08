@@ -193,6 +193,7 @@ public final class FloatGauge {
         if (speedView == null || unitView == null) return;
         speedView.setText(String.valueOf(shown));
         unitView.setText(unit);
+        unitView.setTextSize(TypedValue.COMPLEX_UNIT_SP, LARGE.equals(size) ? 13 : 10);
         boolean heavy = over || alarming;
         speedView.setTextSize(TypedValue.COMPLEX_UNIT_SP, speedSp(heavy));
         speedView.getPaint().setFakeBoldText(heavy);

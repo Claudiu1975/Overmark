@@ -794,6 +794,7 @@ public class MainActivity extends Activity implements LocationListener {
         prefs.edit().putString("float_size", floatSize).apply();
         if (floatSmallButton != null) styleChoice(floatSmallButton, !FloatGauge.LARGE.equals(floatSize));
         if (floatLargeButton != null) styleChoice(floatLargeButton, FloatGauge.LARGE.equals(floatSize));
+        if (FloatGauge.showing()) FloatGauge.show(getApplicationContext(), floatSize);
     }
 
     private void addFloatSize(LinearLayout col) {
@@ -803,6 +804,10 @@ public class MainActivity extends Activity implements LocationListener {
         col.addView(floatSizeLabel);
 
         LinearLayout sizes = row();
+        LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        rowLp.topMargin = dp(4);
+        sizes.setLayoutParams(rowLp);
         floatSmallButton = chip(I18n.t("floatSmall"), !FloatGauge.LARGE.equals(floatSize));
         floatLargeButton = chip(I18n.t("floatLarge"), FloatGauge.LARGE.equals(floatSize));
         LinearLayout.LayoutParams sizeA = new LinearLayout.LayoutParams(0, dp(48), 1f);
@@ -1359,40 +1364,6 @@ public class MainActivity extends Activity implements LocationListener {
         settingsTitle.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
         settingsTitle.setPadding(0, 0, 0, dp(10));
         col.addView(settingsTitle);
-
-        if (BuildConfig.PRO) {
-            addFloatSize(col);
-
-            langButton = chip(I18n.t("language"), false);
-            langButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showLang(true);
-                }
-            });
-            aboutButton = chip(I18n.t("about"), false);
-            aboutButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showAbout(true);
-                }
-            });
-            disclaimerButton = chip(I18n.t("disclaimerTitle"), false);
-            disclaimerButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showDisclaimer(true);
-                }
-            });
-            Button[] items = new Button[] {langButton, aboutButton, disclaimerButton};
-            for (int i = 0; i < items.length; i++) {
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, dp(52));
-                lp.topMargin = dp(10);
-                items[i].setLayoutParams(lp);
-                col.addView(items[i]);
-            }
-        }
 
         scroll.addView(col, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));

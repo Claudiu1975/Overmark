@@ -2,6 +2,12 @@
 
 Each version stays available. A newer build does not remove older packages.
 
+## 1.6.3 Pro
+
+- The gauge size buttons on About work again. The choice is kept, and a gauge that is already showing changes size immediately.
+
+Compiled Pro is not published. Compile it from this source, or search the Google Play Store for Overmark Pro.
+
 ## 1.6.2 Pro
 
 - Same screen flow as Basic. Language is on the main screen. About holds the description, the navigation photo, the gauge size, and the legal text. Settings is gone, so language and About return to the main screen.
