@@ -4,14 +4,14 @@ plugins {
 
 android {
     namespace 'com.overmark.app'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId 'com.overmark.app'
         minSdk 26
-        targetSdk 34
-        versionCode 6
-        versionName '1.5.0'
+        targetSdk 36
+        versionCode 21
+        versionName '1.7.0'
     }
 
     compileOptions {

@@ -12,6 +12,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Insets;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.location.Location;
@@ -33,10 +34,13 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -114,6 +118,11 @@ public class MainActivity extends Activity implements LocationListener {
     private Button plusButton;
     private Button exitButton;
     private Button minimizeButton;
+    private Button floatButton;
+    private Button floatSmallButton;
+    private Button floatLargeButton;
+    private String floatSize = FloatGauge.SMALL;
+    private boolean floatAfterPermission;
     private Button backButton;
     private Button disclaimerBack;
     private Button disclaimerAbout;
@@ -181,6 +190,8 @@ public class MainActivity extends Activity implements LocationListener {
             limitKmh = prefs.getFloat("limit_kmh", 90f);
         }
         mph = prefs.getBoolean("mph", false);
+        floatSize = FloatGauge.LARGE.equals(prefs.getString("float_size", FloatGauge.SMALL))
+                ? FloatGauge.LARGE : FloatGauge.SMALL;
         String savedLang = prefs.getString("lang", null);
         if (savedLang != null) I18n.lang = savedLang;
         else I18n.lang = I18n.matchDevice(Locale.getDefault());
@@ -196,6 +207,11 @@ public class MainActivity extends Activity implements LocationListener {
 
         getWindow().setStatusBarColor(COLOR_BG);
         getWindow().setNavigationBarColor(COLOR_BG);
+        if (Build.VERSION.SDK_INT >= 29) {
+            getWindow().setStatusBarContrastEnforced(false);
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
+        if (Build.VERSION.SDK_INT >= 35) getWindow().setDecorFitsSystemWindows(false);
 
         if (savedInstanceState != null) {
             tracking = savedInstanceState.getBoolean("tracking");
@@ -237,7 +253,9 @@ public class MainActivity extends Activity implements LocationListener {
         root.addView(langPane);
         root.addView(settingsPane);
         applyDirection();
+        keepInsideScreen(root);
         setContentView(root);
+        if (Build.VERSION.SDK_INT >= 35) root.requestApplyInsets();
         registerScreenWatch();
 
         if (tracking && !testMode) beginGps();
@@ -253,6 +271,19 @@ public class MainActivity extends Activity implements LocationListener {
     protected void onResume() {
         super.onResume();
         if (tracking && !testMode && permissionGranted()) beginGps();
+        if (floatAfterPermission) {
+            floatAfterPermission = false;
+            if (FloatGauge.canDraw(this)) {
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        showFloatAndLeave();
+                    }
+                });
+                return;
+            }
+        }
+        FloatGauge.hide();
     }
 
     @Override
@@ -282,6 +313,7 @@ public class MainActivity extends Activity implements LocationListener {
         stopGps();
         if (!isChangingConfigurations()) {
             stopKeepAlive();
+            FloatGauge.hide();
         }
         if (sound != null) sound.release();
         if (vibrator != null) vibrator.cancel();
@@ -361,9 +393,7 @@ public class MainActivity extends Activity implements LocationListener {
         if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) {
             beginGps();
         } else {
-            tracking = false;
-            resetPace();
-            paint();
+            standbyGps();
         }
     }
 
@@ -462,6 +492,10 @@ public class MainActivity extends Activity implements LocationListener {
     private void beginGps() {
         if (!tracking || testMode) return;
         if (locations == null) return;
+        if (!permissionGranted()) {
+            standbyGps();
+            return;
+        }
         boolean enabled;
         try {
             enabled = locations.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -476,13 +510,22 @@ public class MainActivity extends Activity implements LocationListener {
         }
         try {
             locations.requestLocationUpdates(LocationManager.GPS_PROVIDER, 400L, 0f, this);
-            startKeepAlive();
-            ensureNotifyPermission();
         } catch (SecurityException ignored) {
-            tracking = false;
-            resetPace();
-            stopKeepAlive();
+            standbyGps();
+            return;
         }
+        startKeepAlive();
+        ensureNotifyPermission();
+        paint();
+    }
+
+    /** Location was denied or revoked. Test mode is left running. */
+    private void standbyGps() {
+        tracking = false;
+        stopGps();
+        stopKeepAlive();
+        resetPace();
+        clearKeepScreen();
         paint();
     }
 
@@ -498,6 +541,7 @@ public class MainActivity extends Activity implements LocationListener {
     }
 
     private void startKeepAlive() {
+        if (!hasLocationPermission()) return;
         try {
             Intent intent = new Intent(this, KeepAliveService.class);
             if (Build.VERSION.SDK_INT >= 26) startForegroundService(intent);
@@ -505,6 +549,11 @@ public class MainActivity extends Activity implements LocationListener {
         } catch (Exception ignored) {
             /* GPS still runs while this screen is open */
         }
+    }
+
+    private boolean hasLocationPermission() {
+        return checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
     private void stopKeepAlive() {
@@ -722,6 +771,7 @@ public class MainActivity extends Activity implements LocationListener {
         editor.clear();
         editor.putFloat("limit_kmh", limit);
         editor.putBoolean("mph", useMph);
+        editor.putString("float_size", floatSize);
         editor.putInt("limit_rev", 2);
         if (lang != null) editor.putString("lang", lang);
         editor.apply();
@@ -769,6 +819,7 @@ public class MainActivity extends Activity implements LocationListener {
         else speedView.setTextColor(COLOR_SIGNAL);
         unitView.setText(unit);
         elapsedView.setText(String.format(Locale.US, "%.1f s", elapsed / 1000.0));
+        syncGauge(shown, unit);
         rail.setState(Pace.filledMarks(elapsed, over), alarming);
         limitView.setText(String.format(Locale.US, "%.1f", Pace.toDisplay(limitKmh, mph)));
         styleChoice(gpsButton, !testMode);
@@ -796,6 +847,15 @@ public class MainActivity extends Activity implements LocationListener {
         if (testButton != null) testButton.setText(I18n.t("test"));
         if (exitButton != null) exitButton.setText(I18n.t("exit"));
         if (minimizeButton != null) minimizeButton.setText(I18n.t("minimize"));
+        if (floatButton != null) floatButton.setText(I18n.t("floatGauge"));
+        if (floatSmallButton != null) {
+            floatSmallButton.setText(I18n.t("floatSmall"));
+            styleChoice(floatSmallButton, !FloatGauge.LARGE.equals(floatSize));
+        }
+        if (floatLargeButton != null) {
+            floatLargeButton.setText(I18n.t("floatLarge"));
+            styleChoice(floatLargeButton, FloatGauge.LARGE.equals(floatSize));
+        }
         if (limitLabel != null) limitLabel.setText(I18n.t("limit"));
         if (minusButton != null) minusButton.setContentDescription(I18n.t("stepDown"));
         if (plusButton != null) plusButton.setContentDescription(I18n.t("stepUp"));
@@ -1066,6 +1126,18 @@ public class MainActivity extends Activity implements LocationListener {
             }
         });
         power.addView(minimizeButton);
+        floatButton = chip(I18n.t("floatGauge"), false);
+        LinearLayout.LayoutParams halfF = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        halfF.leftMargin = dp(8);
+        floatButton.setLayoutParams(halfF);
+        floatButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        floatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onFloat();
+            }
+        });
+        power.addView(floatButton);
         power.addView(exitButton);
         col.addView(power);
 
@@ -1089,7 +1161,7 @@ public class MainActivity extends Activity implements LocationListener {
         col.addView(settingsButton);
 
         scroll.addView(col, new ScrollView.LayoutParams(
-                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.MATCH_PARENT));
+                ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
         return scroll;
     }
 
@@ -1119,6 +1191,7 @@ public class MainActivity extends Activity implements LocationListener {
         settingsTitle.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
         settingsTitle.setPadding(0, 0, 0, dp(10));
         col.addView(settingsTitle);
+        addGaugeSettings(col);
 
         langButton = chip(I18n.t("language"), false);
         langButton.setOnClickListener(new View.OnClickListener() {
@@ -1543,6 +1616,121 @@ public class MainActivity extends Activity implements LocationListener {
         drawable.setCornerRadius(radius);
         drawable.setStroke(Math.max(1, dp(1)), stroke);
         return drawable;
+    }
+
+    /**
+     * Android 15 draws targetSdk 35+ apps behind the system bars. Read the insets
+     * and pad. Do not call WindowInsets.Builder.setInsets: including Type.ime()
+     * throws IllegalArgumentException during the first layout and kills startup.
+     */
+    private void keepInsideScreen(View root) {
+        if (Build.VERSION.SDK_INT < 35) return;
+        root.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
+            @Override
+            public WindowInsets onApplyWindowInsets(View v, WindowInsets insets) {
+                try {
+                    int type = WindowInsets.Type.systemBars()
+                            | WindowInsets.Type.displayCutout()
+                            | WindowInsets.Type.ime();
+                    Insets bars = insets.getInsets(type);
+                    v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+                } catch (RuntimeException ignored) {
+                    /* show the screen unpadded rather than crash */
+                }
+                return insets;
+            }
+        });
+    }
+
+    private void syncGauge(int shown, String unit) {
+        long elapsed = overSince >= 0L ? SystemClock.elapsedRealtime() - overSince : 0L;
+        boolean over = tracking && (hasFix || testMode) && Pace.overLimit(speedKmh, limitKmh) && overSince >= 0L;
+        int seconds = 0;
+        if (over && elapsed >= 0L) seconds = (int) Math.min(60L, elapsed / 1000L);
+        FloatGauge.update(shown, unit, over, alarming, flashOn, seconds);
+    }
+
+    private void onFloat() {
+        if (!FloatGauge.canDraw(this)) {
+            floatAfterPermission = true;
+            Toast.makeText(this, I18n.t("floatNeed"), Toast.LENGTH_LONG).show();
+            startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + getPackageName())));
+            return;
+        }
+        showFloatAndLeave();
+    }
+
+    private void showFloatAndLeave() {
+        if (tracking && !testMode) startKeepAlive();
+        int shown = Math.round(Pace.toDisplay(speedKmh, mph));
+        syncGauge(shown, mph ? "mph" : "km/h");
+        FloatGauge.show(getApplicationContext(), floatSize);
+        moveTaskToBack(true);
+    }
+
+    private void setFloatSize(String size) {
+        floatSize = FloatGauge.LARGE.equals(size) ? FloatGauge.LARGE : FloatGauge.SMALL;
+        prefs.edit().putString("float_size", floatSize).apply();
+        if (floatSmallButton != null) styleChoice(floatSmallButton, !FloatGauge.LARGE.equals(floatSize));
+        if (floatLargeButton != null) styleChoice(floatLargeButton, FloatGauge.LARGE.equals(floatSize));
+        if (FloatGauge.showing()) FloatGauge.show(getApplicationContext(), floatSize);
+    }
+
+    /** Picture and Pequeño / Grande, added onto the 1.5.0 settings page. */
+    private void addGaugeSettings(LinearLayout col) {
+        try {
+            InputStream in = getAssets().open("nav-gauge.jpg");
+            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(in);
+            in.close();
+            if (bitmap != null) {
+                ImageView view = new ImageView(this);
+                view.setImageBitmap(bitmap);
+                view.setAdjustViewBounds(true);
+                view.setContentDescription(I18n.t("proPhoto"));
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.topMargin = dp(8);
+                view.setLayoutParams(lp);
+                col.addView(view);
+            }
+        } catch (Exception ignored) {
+            /* picture missing */
+        }
+
+        TextView sizeLabel = label(I18n.t("floatSize"), 12, COLOR_MUTED, true);
+        sizeLabel.setLetterSpacing(0.12f);
+        sizeLabel.setPadding(0, dp(12), 0, dp(8));
+        col.addView(sizeLabel);
+
+        LinearLayout sizes = row();
+        floatSmallButton = chip(I18n.t("floatSmall"), !FloatGauge.LARGE.equals(floatSize));
+        floatLargeButton = chip(I18n.t("floatLarge"), FloatGauge.LARGE.equals(floatSize));
+        LinearLayout.LayoutParams sizeA = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        floatSmallButton.setLayoutParams(sizeA);
+        LinearLayout.LayoutParams sizeB = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        sizeB.leftMargin = dp(8);
+        floatLargeButton.setLayoutParams(sizeB);
+        floatSmallButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setFloatSize(FloatGauge.SMALL);
+            }
+        });
+        floatLargeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setFloatSize(FloatGauge.LARGE);
+            }
+        });
+        sizes.addView(floatSmallButton);
+        sizes.addView(floatLargeButton);
+        col.addView(sizes);
+
+        TextView hint = label(I18n.t("floatHint"), 14, COLOR_MUTED, false);
+        hint.setPadding(0, dp(8), 0, dp(6));
+        hint.setLineSpacing(dp(3), 1f);
+        col.addView(hint);
     }
 
     private int dp(int value) {

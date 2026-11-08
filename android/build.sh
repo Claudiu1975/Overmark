@@ -2,7 +2,7 @@
 set -eu
 SDK="${ANDROID_HOME:-/tmp/android-sdk}"
 BT="$SDK/build-tools/34.0.0"
-PLATFORM="$SDK/platforms/android-34/android.jar"
+PLATFORM="$SDK/platforms/android-36/android.jar"
 ROOT="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
 BUILD="$ROOT/build"
 APP_ID="com.overmark.app"
@@ -60,7 +60,7 @@ fi
   -I "$PLATFORM" \
   --manifest "$ROOT/AndroidManifest.xml" \
   --min-sdk-version 26 \
-  --target-sdk-version 34 \
+  --target-sdk-version 36 \
   -A "$ROOT/assets" \
   "$BUILD/flat/"*.flat
 
