@@ -1,0 +1,1 @@
+A floating speed gauge sits on top of other apps. Choose small or large in Settings. Touch the gauge to open Overmark.

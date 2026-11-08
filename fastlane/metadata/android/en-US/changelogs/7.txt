@@ -1,0 +1,1 @@
+Now works on Android 7.0 and newer. Version 1.5.1.

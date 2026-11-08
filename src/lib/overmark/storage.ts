@@ -3,10 +3,11 @@ import { DEFAULT_LIMIT_KMH, snapLimit, type Unit } from "./pace";
 export const LANG_KEY = "overmark-lang";
 export const LIMIT_KEY = "overmark-limit-kmh";
 export const UNIT_KEY = "overmark-unit";
+export const FLOAT_SIZE_KEY = "overmark-float-size";
 const LIMIT_REV_KEY = "overmark-limit-rev";
 const LIMIT_REV = "2";
 
-const KEEP = new Set([LANG_KEY, LIMIT_KEY, UNIT_KEY, LIMIT_REV_KEY]);
+const KEEP = new Set([LANG_KEY, LIMIT_KEY, UNIT_KEY, LIMIT_REV_KEY, FLOAT_SIZE_KEY]);
 
 export function readLang(): string | null {
   try {
@@ -44,6 +45,24 @@ export function writeSpeed(limitKmh: number, unit: Unit): void {
     localStorage.setItem(LIMIT_KEY, String(snapLimit(limitKmh)));
     localStorage.setItem(UNIT_KEY, unit);
     localStorage.setItem(LIMIT_REV_KEY, LIMIT_REV);
+  } catch {
+    /* ignore */
+  }
+}
+
+export type FloatSize = "small" | "large";
+
+export function readFloatSize(): FloatSize {
+  try {
+    return localStorage.getItem(FLOAT_SIZE_KEY) === "large" ? "large" : "small";
+  } catch {
+    return "small";
+  }
+}
+
+export function writeFloatSize(size: FloatSize): void {
+  try {
+    localStorage.setItem(FLOAT_SIZE_KEY, size);
   } catch {
     /* ignore */
   }

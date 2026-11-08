@@ -1,22 +1,100 @@
 [
   {
-    "version": "1.5.0",
-    "file": "overmark-1.5.0.apk",
+    "version": "1.6.4 Pro",
+    "file": "",
     "notes": [
-      "Language, About and Disclaimer moved into Settings at the bottom.",
-      "Bench is now called Test.",
-      "European languages only.",
-      "Contact is goanga.ro, admin@goanga.ro.",
-      "Privacy is inside Settings."
+      "Test runs without location permission. Arming a simulated speed no longer crashes when location is missing, denied, or revoked.",
+      "Losing location mid-session returns GPS tracking to standby. A denied notification permission does not crash the app.",
+      "Compiled Pro is not published. Compile it yourself, or search the Google Play Store for Overmark Pro."
     ]
   },
   {
-    "version": "1.4.0",
-    "file": "overmark-1.4.0.apk",
+    "version": "1.6.3",
+    "file": "",
     "notes": [
-      "The Android app builds with Gradle, so F-Droid can compile it from this repository.",
-      "Licensed under Apache-2.0.",
-      "Unused network permissions are gone. The app still does not upload anything."
+      "Basic only. Same crash fix as Pro 1.6.4: Test works without location permission."
+    ]
+  },
+  {
+    "version": "1.6.2 Pro",
+    "file": "",
+    "notes": [
+      "Same flow as Basic. Language is on the main screen. About holds the description, the navigation photo, the gauge size, and the legal text.",
+      "Compiled Pro is not published. Compile it yourself, or search the Google Play Store for Overmark Pro."
+    ]
+  },
+  {
+    "version": "1.6.2",
+    "file": "overmark-basic-1.6.2.apk",
+    "notes": [
+      "Basic only. The empty Settings page is gone. Language and About return to the main screen."
+    ]
+  },
+  {
+    "version": "1.6.1",
+    "file": "overmark-basic-1.6.1.apk",
+    "notes": [
+      "Basic only. Pro stays at 1.6.0.",
+      "Language is an icon on the main screen.",
+      "About shows the Pro description, a landscape navigation photo, and the legal text underneath."
+    ]
+  },
+  {
+    "version": "1.6.0",
+    "file": "",
+    "notes": [
+      "Overmark Pro keeps the floating gauge and is the paid Play app.",
+      "Overmark Basic is the free app. It has no gauge, and it shows screenshots and a description of Pro.",
+      "The Google Play purchase link will be added to Basic later.",
+      "Compiled Pro is not published. Compile it yourself, or search the Google Play Store for Overmark Pro."
+    ]
+  },
+  {
+    "version": "1.5.5",
+    "file": "overmark-1.5.5.apk",
+    "notes": [
+      "The floating ring now runs for 60 seconds. The first 45 are amber, the last 15 are red. The alarm still starts at 45."
+    ]
+  },
+  {
+    "version": "1.5.4",
+    "file": "overmark-1.5.4.apk",
+    "notes": [
+      "The floating speed is larger. Over the limit it turns red and heavier, and the orange ring fills red one second at a time.",
+      "At 45 seconds the speed on the gauge starts flashing."
+    ]
+  },
+  {
+    "version": "1.5.3",
+    "file": "overmark-1.5.3.apk",
+    "notes": [
+      "A floating gauge shows the current speed on top of other apps.",
+      "Settings offers two sizes, small and large. The size you pick is kept.",
+      "Float sits beside Minimize. Touching the gauge opens Overmark."
+    ]
+  },
+  {
+    "version": "1.5.2",
+    "file": "overmark-1.5.2.apk",
+    "notes": [
+      "Test mode: arm raises the speed from 0 past the set limit (limit reached in about 4 seconds), so the alarm starts by itself.",
+      "Test mode keeps running when the app is minimized, and the lock-screen alert appears when the speed is over the limit.",
+      "Touching the lock-screen alert opens the app."
+    ]
+  },
+  {
+    "version": "1.5.1",
+    "notes": [
+      "Works on Android 7.0 and newer."
+    ]
+  },
+  {
+    "version": "1.5.0",
+    "notes": [
+      "Language, About and Disclaimer moved from the top of the screen into Settings, which is now at the bottom.",
+      "Bench is now called Test.",
+      "European languages only.",
+      "Contact is goanga.ro, admin@goanga.ro."
     ]
   },
   {

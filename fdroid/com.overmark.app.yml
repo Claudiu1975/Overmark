@@ -26,7 +26,49 @@ Builds:
     gradle:
       - yes
 
+  - versionName: '1.5.1'
+    versionCode: 7
+    commit: v1.5.1
+    subdir: android
+    gradle:
+      - yes
+
+  - versionName: '1.5.2'
+    versionCode: 8
+    commit: v1.5.2
+    subdir: android
+    gradle:
+      - yes
+
+  - versionName: '1.5.3'
+    versionCode: 11
+    commit: v1.5.3
+    subdir: android
+    gradle:
+      - yes
+
+  - versionName: '1.5.4'
+    versionCode: 12
+    commit: v1.5.4
+    subdir: android
+    gradle:
+      - yes
+
+  - versionName: '1.5.5'
+    versionCode: 13
+    commit: v1.5.5
+    subdir: android
+    gradle:
+      - yes
+
+  - versionName: '1.6.0'
+    versionCode: 14
+    commit: v1.6.0-play
+    subdir: android
+    gradle:
+      - pro
+
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: '1.5.0'
-CurrentVersionCode: 6
+CurrentVersion: '1.6.0'
+CurrentVersionCode: 14
