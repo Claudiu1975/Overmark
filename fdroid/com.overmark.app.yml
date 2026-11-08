@@ -63,7 +63,7 @@ Builds:
 
   - versionName: '1.6.0'
     versionCode: 14
-    commit: v1.6.0
+    commit: v1.6.0-play
     subdir: android
     gradle:
       - pro
