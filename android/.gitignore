@@ -2,3 +2,6 @@
 /.gradle
 /local.properties
 /debug.keystore
+/upload-keystore.jks
+/keystore.properties
+

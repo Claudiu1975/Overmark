@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.6.0",
+    "file": "overmark-pro-1.6.0.apk",
+    "notes": [
+      "Overmark Pro keeps the floating gauge and is the paid Play app.",
+      "Overmark Basic is the free app. It has no gauge, and it shows screenshots and a description of Pro.",
+      "The Google Play purchase link will be added to Basic later."
+    ]
+  },
+  {
     "version": "1.5.5",
     "file": "overmark-1.5.5.apk",
     "notes": [

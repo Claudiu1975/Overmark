@@ -37,6 +37,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
@@ -131,6 +132,12 @@ public class MainActivity extends Activity implements LocationListener {
     private TextView floatHintView;
     private Button floatSmallButton;
     private Button floatLargeButton;
+    private TextView proTitleView;
+    private TextView proBodyView;
+    private TextView proLinkView;
+    private TextView proCap1;
+    private TextView proCap2;
+    private TextView proCap3;
     private String floatSize = FloatGauge.SMALL;
     private boolean floatAfterPermission;
     private TextView aboutDisclaimerTitle;
@@ -151,7 +158,7 @@ public class MainActivity extends Activity implements LocationListener {
     private EditText langSearch;
     private View langPane;
     private View rootView;
-    private String versionName = "1.5.5";
+    private String versionName = "1.6.0";
     private BroadcastReceiver screenReceiver;
     private boolean alertPosted;
     private long lastAlertAt;
@@ -784,6 +791,85 @@ public class MainActivity extends Activity implements LocationListener {
         if (floatLargeButton != null) styleChoice(floatLargeButton, FloatGauge.LARGE.equals(floatSize));
     }
 
+    private void addFloatSize(LinearLayout col) {
+        floatSizeLabel = label(I18n.t("floatSize"), 12, COLOR_MUTED, true);
+        floatSizeLabel.setLetterSpacing(0.12f);
+        floatSizeLabel.setPadding(0, dp(8), 0, dp(8));
+        col.addView(floatSizeLabel);
+
+        LinearLayout sizes = row();
+        floatSmallButton = chip(I18n.t("floatSmall"), !FloatGauge.LARGE.equals(floatSize));
+        floatLargeButton = chip(I18n.t("floatLarge"), FloatGauge.LARGE.equals(floatSize));
+        LinearLayout.LayoutParams sizeA = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        floatSmallButton.setLayoutParams(sizeA);
+        LinearLayout.LayoutParams sizeB = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        sizeB.leftMargin = dp(8);
+        floatLargeButton.setLayoutParams(sizeB);
+        floatSmallButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setFloatSize(FloatGauge.SMALL);
+            }
+        });
+        floatLargeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setFloatSize(FloatGauge.LARGE);
+            }
+        });
+        sizes.addView(floatSmallButton);
+        sizes.addView(floatLargeButton);
+        col.addView(sizes);
+
+        floatHintView = label(I18n.t("floatHint"), 14, COLOR_MUTED, false);
+        floatHintView.setPadding(0, dp(8), 0, dp(6));
+        floatHintView.setLineSpacing(dp(3), 1f);
+        col.addView(floatHintView);
+    }
+
+    private void addProOffer(LinearLayout col) {
+        proTitleView = label(I18n.t("proTitle"), 22, COLOR_FG, true);
+        proTitleView.setPadding(0, dp(18), 0, dp(8));
+        col.addView(proTitleView);
+        proBodyView = label(I18n.t("proBody"), 15, COLOR_MUTED, false);
+        proBodyView.setLineSpacing(dp(3), 1f);
+        col.addView(proBodyView);
+        addShot(col, "pro-under.png", "proCapUnder");
+        addShot(col, "pro-over.png", "proCapOver");
+        addShot(col, "pro-alarm.png", "proCapAlarm");
+        proLinkView = label(I18n.t("proLinkLater"), 14, COLOR_SIGNAL, false);
+        proLinkView.setPadding(0, dp(8), 0, dp(12));
+        proLinkView.setLineSpacing(dp(3), 1f);
+        col.addView(proLinkView);
+    }
+
+    private void addShot(LinearLayout col, String asset, String captionKey) {
+        try {
+            InputStream in = getAssets().open(asset);
+            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(in);
+            in.close();
+            if (bitmap != null) {
+                ImageView view = new ImageView(this);
+                view.setImageBitmap(bitmap);
+                view.setAdjustViewBounds(true);
+                view.setContentDescription(I18n.t(captionKey));
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                lp.topMargin = dp(14);
+                view.setLayoutParams(lp);
+                col.addView(view);
+            }
+        } catch (Exception ignored) {
+            /* screenshot missing */
+        }
+        TextView caption = label(I18n.t(captionKey), 13, COLOR_MUTED, false);
+        caption.setPadding(0, dp(6), 0, 0);
+        if ("proCapUnder".equals(captionKey)) proCap1 = caption;
+        else if ("proCapOver".equals(captionKey)) proCap2 = caption;
+        else proCap3 = caption;
+        col.addView(caption);
+    }
+
     private void syncGauge(int shown, String unit) {
         long elapsed = overSince >= 0L ? SystemClock.elapsedRealtime() - overSince : 0L;
         boolean over = tracking && (hasFix || testMode) && Pace.overLimit(speedKmh, limitKmh) && overSince >= 0L;
@@ -894,6 +980,12 @@ public class MainActivity extends Activity implements LocationListener {
         if (floatButton != null) floatButton.setText(I18n.t("floatGauge"));
         if (floatSizeLabel != null) floatSizeLabel.setText(I18n.t("floatSize"));
         if (floatHintView != null) floatHintView.setText(I18n.t("floatHint"));
+        if (proTitleView != null) proTitleView.setText(I18n.t("proTitle"));
+        if (proBodyView != null) proBodyView.setText(I18n.t("proBody"));
+        if (proLinkView != null) proLinkView.setText(I18n.t("proLinkLater"));
+        if (proCap1 != null) proCap1.setText(I18n.t("proCapUnder"));
+        if (proCap2 != null) proCap2.setText(I18n.t("proCapOver"));
+        if (proCap3 != null) proCap3.setText(I18n.t("proCapAlarm"));
         if (floatSmallButton != null) {
             floatSmallButton.setText(I18n.t("floatSmall"));
             styleChoice(floatSmallButton, !FloatGauge.LARGE.equals(floatSize));
@@ -1154,32 +1246,23 @@ public class MainActivity extends Activity implements LocationListener {
         LinearLayout power = row();
         power.setPadding(0, dp(8), 0, 0);
         minimizeButton = chip(I18n.t("minimize"), false);
-        floatButton = chip(I18n.t("floatGauge"), false);
         exitButton = chip(I18n.t("exit"), false);
-        LinearLayout.LayoutParams third = new LinearLayout.LayoutParams(0, dp(48), 1f);
-        minimizeButton.setLayoutParams(third);
-        LinearLayout.LayoutParams thirdF = new LinearLayout.LayoutParams(0, dp(48), 1f);
-        thirdF.leftMargin = dp(8);
-        floatButton.setLayoutParams(thirdF);
-        LinearLayout.LayoutParams thirdE = new LinearLayout.LayoutParams(0, dp(48), 1f);
-        thirdE.leftMargin = dp(8);
-        exitButton.setLayoutParams(thirdE);
+        if (BuildConfig.PRO) {
+            floatButton = chip(I18n.t("floatGauge"), false);
+        }
+        LinearLayout.LayoutParams slot = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        minimizeButton.setLayoutParams(slot);
+        LinearLayout.LayoutParams slotExit = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        slotExit.leftMargin = dp(8);
+        exitButton.setLayoutParams(slotExit);
         minimizeButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        floatButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         exitButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
         minimizeButton.setPadding(dp(4), 0, dp(4), 0);
-        floatButton.setPadding(dp(4), 0, dp(4), 0);
         exitButton.setPadding(dp(4), 0, dp(4), 0);
         minimizeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 minimize();
-            }
-        });
-        floatButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onFloat();
             }
         });
         exitButton.setOnClickListener(new View.OnClickListener() {
@@ -1189,7 +1272,20 @@ public class MainActivity extends Activity implements LocationListener {
             }
         });
         power.addView(minimizeButton);
-        power.addView(floatButton);
+        if (floatButton != null) {
+            LinearLayout.LayoutParams slotFloat = new LinearLayout.LayoutParams(0, dp(48), 1f);
+            slotFloat.leftMargin = dp(8);
+            floatButton.setLayoutParams(slotFloat);
+            floatButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+            floatButton.setPadding(dp(4), 0, dp(4), 0);
+            floatButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    onFloat();
+                }
+            });
+            power.addView(floatButton);
+        }
         power.addView(exitButton);
         col.addView(power);
 
@@ -1244,39 +1340,11 @@ public class MainActivity extends Activity implements LocationListener {
         settingsTitle.setPadding(0, 0, 0, dp(10));
         col.addView(settingsTitle);
 
-        floatSizeLabel = label(I18n.t("floatSize"), 12, COLOR_MUTED, true);
-        floatSizeLabel.setLetterSpacing(0.12f);
-        floatSizeLabel.setPadding(0, dp(8), 0, dp(8));
-        col.addView(floatSizeLabel);
-
-        LinearLayout sizes = row();
-        floatSmallButton = chip(I18n.t("floatSmall"), !FloatGauge.LARGE.equals(floatSize));
-        floatLargeButton = chip(I18n.t("floatLarge"), FloatGauge.LARGE.equals(floatSize));
-        LinearLayout.LayoutParams sizeA = new LinearLayout.LayoutParams(0, dp(48), 1f);
-        floatSmallButton.setLayoutParams(sizeA);
-        LinearLayout.LayoutParams sizeB = new LinearLayout.LayoutParams(0, dp(48), 1f);
-        sizeB.leftMargin = dp(8);
-        floatLargeButton.setLayoutParams(sizeB);
-        floatSmallButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setFloatSize(FloatGauge.SMALL);
-            }
-        });
-        floatLargeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setFloatSize(FloatGauge.LARGE);
-            }
-        });
-        sizes.addView(floatSmallButton);
-        sizes.addView(floatLargeButton);
-        col.addView(sizes);
-
-        floatHintView = label(I18n.t("floatHint"), 14, COLOR_MUTED, false);
-        floatHintView.setPadding(0, dp(8), 0, dp(6));
-        floatHintView.setLineSpacing(dp(3), 1f);
-        col.addView(floatHintView);
+        if (BuildConfig.PRO) {
+            addFloatSize(col);
+        } else {
+            addProOffer(col);
+        }
 
         langButton = chip(I18n.t("language"), false);
         langButton.setOnClickListener(new View.OnClickListener() {

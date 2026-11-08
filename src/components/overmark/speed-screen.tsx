@@ -20,7 +20,7 @@ import {
   unitLabel,
   type Unit,
 } from "@/lib/overmark/pace";
-import { clearVolatileStorage, readFloatSize, readSpeed, writeFloatSize, writeSpeed, type FloatSize } from "@/lib/overmark/storage";
+import { clearVolatileStorage, readSpeed, writeSpeed } from "@/lib/overmark/storage";
 
 export function SpeedScreen() {
   const { t, setPicking } = useI18n();
@@ -38,8 +38,6 @@ export function SpeedScreen() {
   const [minimized, setMinimized] = useState(false);
   const [closed, setClosed] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [floating, setFloating] = useState(false);
-  const [floatSize, setFloatSize] = useState<FloatSize>("small");
 
   const overSince = useRef(0);
   const lastBeep = useRef(0);
@@ -49,7 +47,6 @@ export function SpeedScreen() {
     setUnit(saved.unit);
     setLimitKmh(saved.limitKmh);
     setLimitText(formatLimit(saved.limitKmh, saved.unit));
-    setFloatSize(readFloatSize());
     setHydrated(true);
   }, []);
 
@@ -203,29 +200,10 @@ export function SpeedScreen() {
     setRunning(false);
     setGpsStatus("idle");
     setMinimized(false);
-    setFloating(false);
     setClosed(true);
     stopAlarm();
     clearVolatileStorage();
   }
-
-  function openFromGauge() {
-    setFloating(false);
-    setMinimized(false);
-  }
-
-  const gauge = floating ? (
-    <FloatBubble
-      size={floatSize}
-      speed={shown}
-      unit={unitLabel(unit)}
-      over={over}
-      marks={over ? Math.min(60, Math.floor(elapsedMs / 1000)) : 0}
-      alarm={phase === "alarm"}
-      label={t("floatHint")}
-      onOpen={openFromGauge}
-    />
-  ) : null;
 
   if (closed) {
     return (
@@ -267,7 +245,6 @@ export function SpeedScreen() {
             </button>
           </section>
         </main>
-        {gauge}
       </>
     );
   }
@@ -426,16 +403,6 @@ export function SpeedScreen() {
         </button>
         <button
           type="button"
-          onClick={() => {
-            setFloating(true);
-            setMinimized(true);
-          }}
-          className="h-12 flex-1 rounded-full border border-line bg-surface text-sm font-semibold text-fg"
-        >
-          {t("floatGauge")}
-        </button>
-        <button
-          type="button"
           onClick={onExit}
           className="h-12 flex-1 rounded-full border border-line bg-surface text-sm font-semibold text-fg"
         >
@@ -456,38 +423,23 @@ export function SpeedScreen() {
         </button>
         {settingsOpen ? (
           <div className="flex flex-col gap-2">
-            <p className="px-2 pt-1 text-xs font-semibold tracking-widest text-muted">{t("floatSize")}</p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                aria-pressed={floatSize === "small"}
-                onClick={() => {
-                  setFloatSize("small");
-                  writeFloatSize("small");
-                }}
-                className={
-                  "h-12 flex-1 rounded-full border border-line text-sm font-semibold " +
-                  (floatSize === "small" ? "bg-signal text-bg" : "bg-surface text-fg")
-                }
-              >
-                {t("floatSmall")}
-              </button>
-              <button
-                type="button"
-                aria-pressed={floatSize === "large"}
-                onClick={() => {
-                  setFloatSize("large");
-                  writeFloatSize("large");
-                }}
-                className={
-                  "h-12 flex-1 rounded-full border border-line text-sm font-semibold " +
-                  (floatSize === "large" ? "bg-signal text-bg" : "bg-surface text-fg")
-                }
-              >
-                {t("floatLarge")}
-              </button>
-            </div>
-            <p className="px-2 text-sm leading-relaxed text-muted">{t("floatHint")}</p>
+          <div className="flex flex-col gap-3 rounded-deck border border-line bg-surface p-4">
+            <p className="text-xs font-semibold tracking-widest text-signal">{t("proTitle")}</p>
+            <p className="text-sm leading-relaxed text-muted">{t("proBody")}</p>
+            <figure className="flex flex-col gap-2">
+              <img src="/pro/pro-under.png" alt={t("proCapUnder")} className="w-full rounded-2xl" />
+              <figcaption className="text-sm text-muted">{t("proCapUnder")}</figcaption>
+            </figure>
+            <figure className="flex flex-col gap-2">
+              <img src="/pro/pro-over.png" alt={t("proCapOver")} className="w-full rounded-2xl" />
+              <figcaption className="text-sm text-muted">{t("proCapOver")}</figcaption>
+            </figure>
+            <figure className="flex flex-col gap-2">
+              <img src="/pro/pro-alarm.png" alt={t("proCapAlarm")} className="w-full rounded-2xl" />
+              <figcaption className="text-sm text-muted">{t("proCapAlarm")}</figcaption>
+            </figure>
+            <p className="text-sm leading-relaxed text-signal">{t("proLinkLater")}</p>
+          </div>
             <button
               type="button"
               onClick={() => setPicking(true)}
@@ -512,7 +464,6 @@ export function SpeedScreen() {
         ) : null}
       </nav>
     </main>
-    {gauge}
     </>
   );
 }
@@ -562,81 +513,3 @@ function Step({
   );
 }
 
-function FloatBubble({
-  size,
-  speed,
-  unit,
-  over,
-  marks,
-  alarm,
-  label,
-  onOpen,
-}: {
-  size: FloatSize;
-  speed: number;
-  unit: string;
-  over: boolean;
-  marks: number;
-  alarm: boolean;
-  label: string;
-  onOpen: () => void;
-}) {
-  const [pos, setPos] = useState({ x: 16, y: 72 });
-  const drag = useRef<{ px: number; py: number; x: number; y: number; moved: boolean } | null>(null);
-  const wide = size === "large";
-  const hot = over || alarm;
-  const ring = 2 * Math.PI * 46;
-  const amberLen = (45 / 60) * ring;
-  const redLen = (15 / 60) * ring;
-  const amberDone = (Math.min(marks, 45) / 60) * ring;
-  const redDone = (Math.max(0, marks - 45) / 60) * ring;
-  const width = hot ? 7 : 3;
-
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      className={
-        "fixed z-40 flex flex-col items-center justify-center rounded-full bg-bg/95 shadow-lg " +
-        (wide ? " size-40" : " size-28")
-      }
-      style={{ right: pos.x, top: pos.y }}
-      onPointerDown={(event) => {
-        drag.current = { px: event.clientX, py: event.clientY, x: pos.x, y: pos.y, moved: false };
-        event.currentTarget.setPointerCapture(event.pointerId);
-      }}
-      onPointerMove={(event) => {
-        const current = drag.current;
-        if (!current) return;
-        const dx = event.clientX - current.px;
-        const dy = event.clientY - current.py;
-        if (Math.abs(dx) > 8 || Math.abs(dy) > 8) current.moved = true;
-        setPos({ x: current.x - dx, y: current.y + dy });
-      }}
-      onPointerUp={() => {
-        if (drag.current && !drag.current.moved) onOpen();
-        drag.current = null;
-      }}
-    >
-      <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="50" cy="50" r="46" fill="none" stroke="#8A6414" strokeWidth={width} strokeDasharray={`${amberLen} ${ring}`} transform="rotate(-90 50 50)" />
-        <circle cx="50" cy="50" r="46" fill="none" stroke="#7A2A24" strokeWidth={width} strokeDasharray={`${redLen} ${ring}`} strokeDashoffset={-amberLen} transform="rotate(-90 50 50)" />
-        {hot && marks > 0 ? (
-          <circle cx="50" cy="50" r="46" fill="none" stroke="#E8A317" strokeWidth={width} strokeDasharray={`${amberDone} ${ring}`} transform="rotate(-90 50 50)" />
-        ) : null}
-        {hot && marks > 45 ? (
-          <circle cx="50" cy="50" r="46" fill="none" stroke="#E23B2F" strokeWidth={width} strokeDasharray={`${redDone} ${ring}`} strokeDashoffset={-amberLen} transform="rotate(-90 50 50)" />
-        ) : null}
-      </svg>
-      <span
-        className={
-          (alarm ? "speed-alarm font-black " : hot ? "font-black text-alarm " : "font-bold text-signal ") +
-          (wide ? "font-display text-6xl leading-none tabular" : "font-display text-4xl leading-none tabular")
-        }
-      >
-        {speed}
-      </span>
-      <span className="text-[10px] tracking-widest text-muted">{unit}</span>
-    </button>
-  );
-}

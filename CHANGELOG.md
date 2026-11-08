@@ -2,6 +2,14 @@
 
 Each version stays available. A newer build does not remove older packages.
 
+## 1.6.0
+
+- Overmark is now two apps. Overmark Pro keeps the floating gauge. Overmark Basic does not.
+- Basic shows screenshots of the Pro gauge and a description. The Google Play purchase link will be added later.
+- Pro is the package prepared for Google Play as the paid app. It targets Android 16.
+
+Package: [public/overmark-pro-1.6.0.apk](public/overmark-pro-1.6.0.apk) and [public/overmark-basic-1.6.0.apk](public/overmark-basic-1.6.0.apk)
+
 ## 1.5.5
 
 - The floating ring now runs for 60 seconds. The first 45 are amber, the last 15 are red. The alarm still starts at 45.
