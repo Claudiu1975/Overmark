@@ -27,6 +27,10 @@ cd android
 ./gradlew assembleProRelease
 ```
 
+## What's new in 1.7.3 Pro
+
+The Google Play package is now `com.overmark.pro`. This is a new paid Play app. The older `com.overmark.app` listing stays as it is and is not used for this release. Basic is unchanged at 1.7.1.
+
 ## What's new in 1.7.1
 
 Rebuilt on the stable 1.5.0 base, so the app starts again. Test does not crash without location permission. On Android 15 the screen stays clear of the status bar and the navigation buttons. Translations are fixed in every language. Settings shows a preview of the Overmark Pro floating gauge.
@@ -57,7 +61,7 @@ Basic only. Language is an icon on the main screen. About shows the Pro descript
 
 Overmark is split in two.
 
-- **Overmark Pro** (`com.overmark.app`) keeps the floating gauge. This is the paid Google Play app.
+- **Overmark Pro** (`com.overmark.pro`) keeps the floating gauge. This is the paid Google Play app.
 - **Overmark Basic** (`com.overmark.basic`) is the free app. It has no floating gauge. Settings shows screenshots of Pro and a description. The purchase link comes later.
 
 ## What's new in 1.5.5
