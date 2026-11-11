@@ -2,6 +2,13 @@
 
 Each version stays available. A newer build does not remove older packages.
 
+## 1.7.3 Pro
+
+- The Google Play package is now `com.overmark.pro`. This is a new paid Play app. The older `com.overmark.app` listing stays as it is and is not used for this release.
+- Version 1.7.3 (versionCode 24). Basic stays at 1.7.1 (versionCode 20).
+
+Compiled Pro is not published. Compile it from this source, or search the Google Play Store for Overmark Pro.
+
 ## 1.6.4 Pro
 
 - Test no longer crashes when location permission is missing, denied, or revoked. The simulated speed still runs on screen. Staying alive after minimize still needs location permission, because that notice is a location foreground service.
