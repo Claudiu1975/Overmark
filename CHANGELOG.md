@@ -20,7 +20,7 @@ Compiled Pro is not published. Compile it from this source, or search the Google
 
 - Same fix as Pro 1.6.4. Test runs without location permission and does not crash if that permission, or notifications, is denied or revoked.
 
-The previous Basic package remains [public/overmark-basic-1.6.2.apk](public/overmark-basic-1.6.2.apk).
+The previous Basic package remains [overmark-basic-1.6.2.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.6.2/overmark-basic-1.6.2.apk).
 
 ## 1.6.3 Pro
 
@@ -38,7 +38,7 @@ Pro is not published as a compiled package. Compile it from this source, or sear
 
 - Basic only. The empty Settings page is gone. Choosing a language, or leaving About, returns to the main screen.
 
-Package: [public/overmark-basic-1.6.2.apk](public/overmark-basic-1.6.2.apk)
+Package: [overmark-basic-1.6.2.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.6.2/overmark-basic-1.6.2.apk)
 
 ## 1.6.1 Basic
 
@@ -46,7 +46,7 @@ Package: [public/overmark-basic-1.6.2.apk](public/overmark-basic-1.6.2.apk)
 - Language moves to a small icon on the main screen.
 - About now holds the Pro description, one landscape navigation photo with the gauge, and the legal text underneath.
 
-Package: [public/overmark-basic-1.6.1.apk](public/overmark-basic-1.6.1.apk)
+Package: [overmark-basic-1.6.1.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.6.1/overmark-basic-1.6.1.apk)
 
 ## 1.6.0
 
@@ -54,7 +54,7 @@ Package: [public/overmark-basic-1.6.1.apk](public/overmark-basic-1.6.1.apk)
 - Basic shows screenshots of the Pro gauge and a description. The Google Play purchase link will be added later.
 - Pro is the package prepared for Google Play as the paid app. It targets Android 16.
 
-Package: [public/overmark-basic-1.6.0.apk](public/overmark-basic-1.6.0.apk). The Pro build from this version is not published.
+Package: [overmark-basic-1.6.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.6.0-play/overmark-basic-1.6.0.apk). The Pro build from this version is not published.
 
 ## 1.5.1
 
@@ -80,7 +80,7 @@ Package: [public/overmark-basic-1.6.0.apk](public/overmark-basic-1.6.0.apk). The
 - Disclaimer and About are separate pages.
 - What's new is recorded for this version, and every published package stays in the archive.
 
-Package: [public/overmark-1.3.0.apk](public/overmark-1.3.0.apk)
+Package: [overmark-1.3.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.3.0/overmark-1.3.0.apk)
 
 ## 1.2.0
 
@@ -89,7 +89,7 @@ Package: [public/overmark-1.3.0.apk](public/overmark-1.3.0.apk)
 - A notification when speed is over the limit and the screen is off.
 - The app can follow the device language. A language you choose stays on the device.
 
-Package: [public/overmark-1.2.0.apk](public/overmark-1.2.0.apk)
+Package: [overmark-1.2.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.2.0/overmark-1.2.0.apk)
 
 ## 1.1.0
 
@@ -98,4 +98,4 @@ Package: [public/overmark-1.2.0.apk](public/overmark-1.2.0.apk)
 - Exit and minimize. Exit clears temporary files. Only the language and the speed limit are kept.
 - The limit starts at 90 km/h and moves in steps of 0.5 km/h.
 
-Package: [public/overmark-1.1.0.apk](public/overmark-1.1.0.apk)
+Package: [overmark-1.1.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.1.0/overmark-1.1.0.apk)
