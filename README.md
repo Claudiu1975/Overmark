@@ -64,27 +64,6 @@ Overmark is split in two.
 - **Overmark Pro** (`com.overmark.pro`) keeps the floating gauge. This is the paid Google Play app.
 - **Overmark Basic** (`com.overmark.basic`) is the free app. It has no floating gauge. Settings shows screenshots of Pro and a description. The purchase link comes later.
 
-## What's new in 1.5.5
-
-- The floating ring now runs for 60 seconds. The first 45 are amber, the last 15 are red. The alarm still starts at 45.
-
-## What's new in 1.5.4
-
-- The floating speed is larger. Over the limit it turns red and heavier, and the orange ring fills red one second at a time.
-- At 45 seconds the speed on the gauge starts flashing.
-
-## What's new in 1.5.3
-
-- A floating gauge shows the current speed on top of other apps.
-- Settings offers two sizes, small and large.
-- Float sits beside Minimize. Touching the gauge opens Overmark.
-
-## What's new in 1.5.2
-
-- Test: touching arm raises the simulated speed from 0, reaches the set limit in about 4 seconds and keeps going a little above it, so the alarm starts by itself.
-- Test mode keeps running when the app is minimized, and the lock-screen alert appears when the speed is over the limit.
-- Touching the lock-screen alert opens the app.
-
 ## What's new in 1.5.1
 
 - Works on Android 7.0 and newer.

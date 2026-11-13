@@ -56,35 +56,6 @@ Package: [public/overmark-basic-1.6.1.apk](public/overmark-basic-1.6.1.apk)
 
 Package: [public/overmark-basic-1.6.0.apk](public/overmark-basic-1.6.0.apk). The Pro build from this version is not published.
 
-## 1.5.5
-
-- The floating ring now runs for 60 seconds. The first 45 are amber, the last 15 are red. The alarm still starts at 45.
-
-Package: [public/overmark-1.5.5.apk](public/overmark-1.5.5.apk)
-
-## 1.5.4
-
-- The floating speed is larger. Over the limit it turns red and heavier, and the orange ring fills red one second at a time.
-- At 45 seconds the speed on the gauge starts flashing.
-
-Package: [public/overmark-1.5.4.apk](public/overmark-1.5.4.apk)
-
-## 1.5.3
-
-- A floating gauge shows the current speed on top of other apps.
-- Settings offers two sizes, small and large. The size you pick is kept.
-- Float sits beside Minimize. Touching the gauge opens Overmark.
-
-Package: [public/overmark-1.5.3.apk](public/overmark-1.5.3.apk)
-
-## 1.5.2
-
-- Test: touching arm raises the simulated speed from 0, reaches the set limit in about 4 seconds and keeps going a little above it, so the alarm starts by itself.
-- Test mode keeps running when the app is minimized, and the lock-screen alert appears when the speed is over the limit.
-- Touching the lock-screen alert opens the app.
-
-Package: [public/overmark-1.5.2.apk](public/overmark-1.5.2.apk)
-
 ## 1.5.1
 
 - Runs on Android 7.0 and newer (it needed Android 8 before).
