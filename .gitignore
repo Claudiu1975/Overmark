@@ -12,3 +12,6 @@ public/overmark-pro-*.aab
 .env
 .env.*
 .DS_Store
+
+# Videos are kept outside the repository
+*.mp4
