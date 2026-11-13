@@ -12,3 +12,8 @@ public/overmark-pro-*.aab
 .env
 .env.*
 .DS_Store
+
+# Packages are published as GitHub Release assets, not committed
+*.apk
+*.apk.idsig
+*.aab

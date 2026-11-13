@@ -104,14 +104,14 @@ cd android
 | --- | --- |
 | 1.7.1 Basic | [overmark-basic-1.7.1.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.7.1/overmark-basic-1.7.1.apk) |
 | 1.6.3 Basic | [overmark-basic-1.6.3.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.6.3/overmark-basic-1.6.3.apk) |
-| 1.6.2 Basic | [public/overmark-basic-1.6.2.apk](public/overmark-basic-1.6.2.apk) |
-| 1.6.0 Basic | [public/overmark-basic-1.6.0.apk](public/overmark-basic-1.6.0.apk) |
-| 1.5.0 | [public/overmark-1.5.0.apk](public/overmark-1.5.0.apk) |
-| overmark-android-7 | [public/overmark-android-7.apk](public/overmark-android-7.apk) |
-| 1.4.0 | [public/overmark-1.4.0.apk](public/overmark-1.4.0.apk) |
-| 1.3.0 | [public/overmark-1.3.0.apk](public/overmark-1.3.0.apk) |
-| 1.2.0 | [public/overmark-1.2.0.apk](public/overmark-1.2.0.apk) |
-| 1.1.0 | [public/overmark-1.1.0.apk](public/overmark-1.1.0.apk) |
+| 1.6.2 Basic | [overmark-basic-1.6.2.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.6.2/overmark-basic-1.6.2.apk) |
+| 1.6.0 Basic | [overmark-basic-1.6.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.6.0-play/overmark-basic-1.6.0.apk) |
+| 1.5.0 | [overmark-1.5.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.0/overmark-1.5.0.apk) |
+| overmark-android-7 | [overmark-android-7.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.5.1/overmark-android-7.apk) |
+| 1.4.0 | [overmark-1.4.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.4.0/overmark-1.4.0.apk) |
+| 1.3.0 | [overmark-1.3.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.3.0/overmark-1.3.0.apk) |
+| 1.2.0 | [overmark-1.2.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.2.0/overmark-1.2.0.apk) |
+| 1.1.0 | [overmark-1.1.0.apk](https://github.com/Claudiu1975/Overmark/releases/download/v1.1.0/overmark-1.1.0.apk) |
 
 A newer build does not remove older packages.
 
